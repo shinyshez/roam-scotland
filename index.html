@@ -239,7 +239,7 @@
         const SHEET_ID = new URLSearchParams(window.location.search).get('sheet');
 
         function sheetURL(tab) {
-            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv&sheet=${encodeURIComponent(tab)}`;
+            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
         }
 
         // ── CSV PARSER ──────────────────────────────────────────
