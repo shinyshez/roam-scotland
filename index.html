@@ -227,146 +227,161 @@
             <button class="toggle-btn" data-route="rolling">🌾 Rolling</button>
         </div>
     </div>
-    <div class="container" id="days-container"></div>
+    <div class="container" id="days-container">
+        <div style="text-align:center; padding:3rem 1rem; color:#000080;">
+            <div style="font-size:2rem; margin-bottom:1rem;">⏳</div>
+            <div style="font-weight:600;">Loading route data...</div>
+        </div>
+    </div>
     <script>
-        const days = [
-            {
-                day: 1,
-                emoji: '1',
-                title: 'Inverness → Bonar Bridge / Golspie',
-                rugged: { end: 'Golspie', distance: '121 km', elevation: '1566 m' },
-                rolling: { end: 'Bonar Bridge', distance: '89 km', elevation: '1097 m' },
-                surface: 'Road → Gravel',
-                shops: [
-                    { name: 'Evanton Co-op', rugged: '10 km', rolling: '10 km', opens: 'TBC' },
-                    { name: 'Ardgay Stores', rugged: '58 km', rolling: '58 km', opens: 'TBC' },
-                    { name: 'Spar Bonar Bridge', rugged: 'off-route (+~6 km)', rolling: '89 km', opens: 'TBC' }
-                ],
-                accommodation: [
-                    { name: 'Bonar Bridge / Golspie B&Bs & pods', rugged: '121 km', rolling: '89 km', details: 'TBC' },
-                    { name: 'Wild camp options', location: 'Loch Fleet / Strath Carnaig', rugged: '~110–120 km', rolling: '~80–88 km', details: 'Exact spots TBC' }
-                ]
-            },
-            {
-                day: 2,
-                emoji: '2',
-                title: 'Golspie → Helmsdale / Loch More',
-                rugged: { end: 'Loch More (via Forsinard)', distance: '94 km', elevation: '1073 m' },
-                rolling: { end: 'Helmsdale', distance: '75 km', elevation: '943 m' },
-                surface: 'Coastal track • Forest tracks • Moorland',
-                shops: [
-                    { name: 'Golspie (village)', rugged: '0 km', rolling: '0 km', opens: 'TBC' },
-                    { name: 'Brora (coastal detour)', rugged: 'off-route (+~15 km)', rolling: '~12 km', opens: 'TBC' },
-                    { name: 'Forsinard Tearoom', rugged: '~52 km', rolling: 'off-route (+~7 km)', opens: 'TBC' },
-                    { name: 'Helmsdale shops', rugged: 'off-route (+~10–20 km)', rolling: '75 km', opens: 'TBC' }
-                ],
-                accommodation: [
-                    { name: 'Loch More (beach wild camp)', rugged: '94 km', rolling: '—', details: 'Basic wild camp' },
-                    { name: 'Forsinard / Forsinard Lodge', rugged: '~52 km', rolling: 'off-route (+~7 km)', details: 'Booking TBC' },
-                    { name: 'Helmsdale hotels/guesthouses', rugged: '—', rolling: '75 km', details: 'TBC' }
-                ]
-            },
-            {
-                day: 3,
-                emoji: '3',
-                title: 'Loch More / Helmsdale → Tongue',
-                rugged: { end: 'Tongue', distance: '120 km', elevation: '1120 m' },
-                rolling: { end: 'Tongue', distance: '105 km', elevation: '1049 m' },
-                surface: 'Moorland • Estate tracks • Coastal',
-                shops: [
-                    { name: 'Garvault House (lunch)', rugged: '~38 km', rolling: '~30 km', opens: 'TBC' },
-                    { name: 'Bettyhill shop & bistro', rugged: '~80 km', rolling: '~75 km', opens: 'TBC' },
-                    { name: 'Small croft shops / roadside kiosks', location: 'scattered', opens: 'TBC / seasonal' }
-                ],
-                accommodation: [
-                    { name: 'Tongue hotels & hostel', rugged: '120 km', rolling: '105 km', details: 'Booking TBC' },
-                    { name: 'Tongue campsite / bakery', rugged: '~118–120 km', rolling: '~103–105 km', details: 'TBC' }
-                ]
-            },
-            {
-                day: 4,
-                emoji: '4',
-                title: 'Tongue → Lairg / Bonar Bridge',
-                rugged: { end: 'Bonar Bridge', distance: '130 km', elevation: '1796 m' },
-                rolling: { end: 'Lairg', distance: '90 km', elevation: '1035 m' },
-                surface: 'Road + rough tracks • River crossing (Cashel Dhu) on rugged line',
-                shops: [
-                    { name: 'Crask Inn (roadside)', rugged: '~55 km', rolling: '~40 km', opens: 'TBC, check seasonal hours' },
-                    { name: 'Invercassley Tearoom / small shop', rugged: '~95 km', rolling: '~68 km', opens: 'TBC / limited hours' },
-                    { name: 'Local pubs (various)', location: 'Lairg / Bonar approaches', opens: 'TBC' }
-                ],
-                accommodation: [
-                    { name: 'Glen Cassley wild camp', rugged: '~110–120 km', rolling: 'off-route', details: 'Spot details TBC' },
-                    { name: 'Lairg hotels & B&Bs', rugged: '—', rolling: '90 km', details: 'Booking TBC' },
-                    { name: 'Bonar Bridge overnight options', rugged: '130 km', rolling: '—', details: 'TBC' }
-                ]
-            },
-            {
-                day: 5,
-                emoji: '5',
-                title: 'Lairg / Bonar Bridge → Ullapool',
-                rugged: { end: 'Ullapool', distance: '92 km', elevation: '957 m' },
-                rolling: { end: 'Ullapool', distance: '58 km', elevation: '626 m' },
-                surface: 'Long mixed gravel • Rough 5–6 km section (Lochan Diamh)',
-                shops: [
-                    { name: 'Small roadside shops (limited)', rugged: 'variable', rolling: '0–30 km', opens: 'TBC' },
-                    { name: 'Ullapool supermarket & cafés', location: 'Finish', details: 'Large supermarket, opens TBC' }
-                ],
-                accommodation: [
-                    { name: 'Schoolhouse / Knockdamph bothy', rugged: 'on-route', rolling: 'off-route', details: 'No booking, check bothy code' },
-                    { name: 'Ullapool hotels / hostels / campsite', location: 'Finish: Ullapool', details: 'Booking/advice TBC' }
-                ]
-            },
-            {
-                day: 6,
-                emoji: '6',
-                title: 'Ullapool → Evanton / Glen Glass',
-                rugged: { end: 'Glen Glass / Evanton', distance: '92 km', elevation: '1350 m' },
-                rolling: { end: 'Evanton', distance: '90 km', elevation: '1100 m' },
-                surface: '~100 km continuous gravel • Long estate tracks',
-                shops: [
-                    { name: 'Aultguish Inn (off-route)', rugged: '~35–45 km', rolling: 'off-route', opens: 'TBC' },
-                    { name: 'Small roadside cafés', location: 'scattered', opens: 'TBC' },
-                    { name: 'Evanton / Alness shops & cafés', rugged: '~92 km', rolling: '~90 km', opens: 'TBC' }
-                ],
-                accommodation: [
-                    { name: 'Upper Glen Glass camping spots', rugged: 'near finish (~92 km)', rolling: 'off-route', details: 'Basic wild camping' },
-                    { name: 'Evanton / Alness B&Bs & hotels', location: 'Finish', details: 'Booking TBC' }
-                ]
-            },
-            {
-                day: 7,
-                emoji: '7',
-                title: 'Evanton / Glen Glass → Inverness',
-                rugged: { end: 'Inverness', distance: '88 km', elevation: '1145 m' },
-                rolling: { end: 'Inverness', distance: '39 km', elevation: '364 m' },
-                surface: 'Road → Forestry → Firthside',
-                shops: [
-                    { name: 'Highland Farm Café', rugged: '~25 km', rolling: '~12 km', opens: '10:00? — TBC' },
-                    { name: 'Contin shop', rugged: '~30 km', rolling: '~18 km', opens: 'TBC' },
-                    { name: 'Conon Hotel / White Cottage Café', location: 'last 10–20 km', opens: 'TBC' }
-                ],
-                accommodation: [
-                    { name: 'Final hotels / B&Bs in Inverness', location: 'Finish: 0 km', details: 'Many options, booking recommended' },
-                    { name: 'Last wild camping pockets', location: 'Upper Beauly Firth area', details: 'TBC / check local regs' }
-                ]
+        // ── CONFIG ──────────────────────────────────────────────
+        // Replace this with your Google Sheet ID after publishing
+        const SHEET_ID = 'YOUR_SHEET_ID_HERE';
+
+        function sheetURL(tab) {
+            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+        }
+
+        // ── CSV PARSER ──────────────────────────────────────────
+        function parseCSV(text) {
+            const rows = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (inQuotes) {
+                    if (ch === '"' && text[i + 1] === '"') { current += '"'; i++; }
+                    else if (ch === '"') { inQuotes = false; }
+                    else { current += ch; }
+                } else {
+                    if (ch === '"') { inQuotes = true; }
+                    else if (ch === ',') { rows.push(current); current = ''; }
+                    else if (ch === '\n' || (ch === '\r' && text[i + 1] === '\n')) {
+                        rows.push(current); current = '';
+                        if (ch === '\r') i++;
+                        rows.push(null); // row delimiter
+                    } else { current += ch; }
+                }
             }
-        ];
-        const optional = {
-            emoji: '⚠️',
-            title: 'Cape Wrath Spoke',
-            distance: '~96 km',
-            elevation: '~1300 m',
-            warning: 'Ferry coordination + MoD range access check required',
-            shops: [
-                { name: 'Ozone Café at Cape Wrath lighthouse', opens: 'Seasonal — TBC' }
-            ],
-            accommodation: [
-                { name: 'Kearvaig Bothy, local bothies', details: 'Distances variable, details TBC' }
-            ],
-            access: 'Rugged line variant or separate spoke; detours may be +10–40 km depending on ferry and approach'
-        };
+            if (current) rows.push(current);
+
+            // Split into rows of objects
+            const result = [];
+            let headers = [];
+            let row = [];
+            let isHeader = true;
+            for (const val of rows) {
+                if (val === null) {
+                    if (isHeader) { headers = row; isHeader = false; }
+                    else if (row.length > 0) {
+                        const obj = {};
+                        headers.forEach((h, i) => obj[h.trim()] = (row[i] || '').trim());
+                        result.push(obj);
+                    }
+                    row = [];
+                } else { row.push(val); }
+            }
+            if (row.length > 0 && !isHeader) {
+                const obj = {};
+                headers.forEach((h, i) => obj[h.trim()] = (row[i] || '').trim());
+                result.push(obj);
+            }
+            return result;
+        }
+
+        // ── DATA LOADING ────────────────────────────────────────
+        let days = [];
+        let optional = {};
         let currentRoute = 'rugged';
+
+        async function loadData() {
+            try {
+                const [daysCSV, shopsCSV, accCSV, optCSV] = await Promise.all([
+                    fetch(sheetURL('Days')).then(r => r.text()),
+                    fetch(sheetURL('Shops')).then(r => r.text()),
+                    fetch(sheetURL('Accommodation')).then(r => r.text()),
+                    fetch(sheetURL('Optional')).then(r => r.text()),
+                ]);
+
+                const daysData = parseCSV(daysCSV);
+                const shopsData = parseCSV(shopsCSV);
+                const accData = parseCSV(accCSV);
+                const optData = parseCSV(optCSV);
+
+                // Group shops and accommodation by day
+                const shopsByDay = {};
+                shopsData.forEach(s => {
+                    const d = s.day;
+                    if (!shopsByDay[d]) shopsByDay[d] = [];
+                    shopsByDay[d].push(s);
+                });
+
+                const accByDay = {};
+                accData.forEach(a => {
+                    const d = a.day;
+                    if (!accByDay[d]) accByDay[d] = [];
+                    accByDay[d].push(a);
+                });
+
+                // Build days array
+                days = daysData.map(d => ({
+                    day: parseInt(d.day),
+                    emoji: d.day,
+                    title: d.title,
+                    rugged: { end: d.rugged_end, distance: d.rugged_distance, elevation: d.rugged_elevation },
+                    rolling: { end: d.rolling_end, distance: d.rolling_distance, elevation: d.rolling_elevation },
+                    surface: d.surface,
+                    shops: (shopsByDay[d.day] || []).map(s => ({
+                        name: s.name, rugged: s.rugged, rolling: s.rolling,
+                        opens: s.opens, location: s.location, details: s.details
+                    })),
+                    accommodation: (accByDay[d.day] || []).map(a => ({
+                        name: a.name, rugged: a.rugged, rolling: a.rolling,
+                        details: a.details, location: a.location
+                    }))
+                }));
+
+                // Build optional object from key-value pairs
+                const optMap = {};
+                optData.forEach(row => { optMap[row.field] = row.value; });
+                optional = {
+                    emoji: '⚠️',
+                    title: optMap.title || 'Cape Wrath Spoke',
+                    distance: optMap.distance || '',
+                    elevation: optMap.elevation || '',
+                    warning: optMap.warning || '',
+                    access: optMap.access || '',
+                    shops: [],
+                    accommodation: []
+                };
+                // Collect numbered shop/accommodation entries
+                for (let i = 1; optMap[`shop_${i}_name`]; i++) {
+                    optional.shops.push({
+                        name: optMap[`shop_${i}_name`],
+                        opens: optMap[`shop_${i}_opens`] || ''
+                    });
+                }
+                for (let i = 1; optMap[`accommodation_${i}_name`]; i++) {
+                    optional.accommodation.push({
+                        name: optMap[`accommodation_${i}_name`],
+                        details: optMap[`accommodation_${i}_details`] || ''
+                    });
+                }
+
+                renderDays();
+            } catch (err) {
+                document.getElementById('days-container').innerHTML = `
+                    <div style="text-align:center; padding:3rem 1rem; color:#c00;">
+                        <div style="font-size:2rem; margin-bottom:1rem;">⚠️</div>
+                        <div style="font-weight:600; margin-bottom:0.5rem;">Failed to load route data</div>
+                        <div style="font-size:0.85rem; color:#666;">Check that the Google Sheet is published and the Sheet ID is correct.</div>
+                        <div style="font-size:0.75rem; color:#999; margin-top:1rem;">${err.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // ── RENDERING ───────────────────────────────────────────
         function renderDays() {
             const container = document.getElementById('days-container');
             container.innerHTML = '';
@@ -488,7 +503,8 @@
                 renderDays();
             });
         });
-        renderDays();
+        // Load data on page load
+        loadData();
     </script>
 </body>
 </html>

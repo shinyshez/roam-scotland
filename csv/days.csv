@@ -1,0 +1,8 @@
+day,title,rugged_end,rugged_distance,rugged_elevation,rolling_end,rolling_distance,rolling_elevation,surface
+1,Inverness → Bonar Bridge / Golspie,Golspie,121 km,1566 m,Bonar Bridge,89 km,1097 m,Road → Gravel
+2,Golspie → Helmsdale / Loch More,Loch More (via Forsinard),94 km,1073 m,Helmsdale,75 km,943 m,Coastal track • Forest tracks • Moorland
+3,Loch More / Helmsdale → Tongue,Tongue,120 km,1120 m,Tongue,105 km,1049 m,Moorland • Estate tracks • Coastal
+4,Tongue → Lairg / Bonar Bridge,Bonar Bridge,130 km,1796 m,Lairg,90 km,1035 m,Road + rough tracks • River crossing (Cashel Dhu) on rugged line
+5,Lairg / Bonar Bridge → Ullapool,Ullapool,92 km,957 m,Ullapool,58 km,626 m,Long mixed gravel • Rough 5–6 km section (Lochan Diamh)
+6,Ullapool → Evanton / Glen Glass,Glen Glass / Evanton,92 km,1350 m,Evanton,90 km,1100 m,~100 km continuous gravel • Long estate tracks
+7,Evanton / Glen Glass → Inverness,Inverness,88 km,1145 m,Inverness,39 km,364 m,Road → Forestry → Firthside
