@@ -235,8 +235,8 @@
     </div>
     <script>
         // ── CONFIG ──────────────────────────────────────────────
-        // Replace this with your Google Sheet ID after publishing
-        const SHEET_ID = 'YOUR_SHEET_ID_HERE';
+        // Pass sheet ID as ?sheet=YOUR_SHEET_ID in the URL
+        const SHEET_ID = new URLSearchParams(window.location.search).get('sheet');
 
         function sheetURL(tab) {
             return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
@@ -295,6 +295,16 @@
         let currentRoute = 'rugged';
 
         async function loadData() {
+            if (!SHEET_ID) {
+                document.getElementById('days-container').innerHTML = `
+                    <div style="text-align:center; padding:3rem 1rem; color:#c00;">
+                        <div style="font-size:2rem; margin-bottom:1rem;">⚠️</div>
+                        <div style="font-weight:600; margin-bottom:0.5rem;">No Sheet ID provided</div>
+                        <div style="font-size:0.85rem; color:#666;">Add <code>?sheet=YOUR_SHEET_ID</code> to the URL.</div>
+                    </div>
+                `;
+                return;
+            }
             try {
                 const [daysCSV, shopsCSV, accCSV, optCSV] = await Promise.all([
                     fetch(sheetURL('Days')).then(r => r.text()),
