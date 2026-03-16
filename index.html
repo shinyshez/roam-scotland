@@ -405,7 +405,7 @@
                 document.title = pageTitle;
 
                 // Hide route toggle if configured
-                if (config.show_route_toggle === 'false') {
+                if (config.show_route_toggle && config.show_route_toggle.toLowerCase() === 'false') {
                     document.getElementById('route-toggle').style.display = 'none';
                 }
 
