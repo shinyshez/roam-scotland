@@ -364,7 +364,7 @@
 
         // ── DATA LOADING ────────────────────────────────────────
         let days = [];
-        let optional = {};
+        let optional = null;
         let currentRoute = 'rugged';
 
         function dismissSplash() {
@@ -418,7 +418,7 @@
                     fetchCSV(sheetURL('Days')),
                     fetchCSV(sheetURL('Shops')),
                     fetchCSV(sheetURL('Accommodation')),
-                    fetchCSV(sheetURL('Optional')),
+                    fetch(sheetURL('Optional')).then(r => r.ok ? r.text() : '').catch(() => ''),
                 ]);
 
                 const daysData = parseCSV(daysCSV);
@@ -459,19 +459,20 @@
                     }))
                 }));
 
-                // Build optional object from key-value pairs
+                // Build optional object from key-value pairs (skip if no data)
                 const optMap = {};
-                optData.forEach(row => { optMap[row.field] = row.value; });
-                optional = {
-                    emoji: '⚠️',
-                    title: optMap.title || 'Cape Wrath Spoke',
-                    distance: optMap.distance || '',
-                    elevation: optMap.elevation || '',
-                    warning: optMap.warning || '',
-                    access: optMap.access || '',
-                    shops: [],
-                    accommodation: []
-                };
+                optData.forEach(row => { if (row.field) optMap[row.field] = row.value; });
+                if (optMap.title) {
+                    optional = {
+                        emoji: '⚠️',
+                        title: optMap.title,
+                        distance: optMap.distance || '',
+                        elevation: optMap.elevation || '',
+                        warning: optMap.warning || '',
+                        access: optMap.access || '',
+                        shops: [],
+                        accommodation: []
+                    };
                 // Collect numbered shop/accommodation entries
                 for (let i = 1; optMap[`shop_${i}_name`]; i++) {
                     optional.shops.push({
@@ -484,6 +485,9 @@
                         name: optMap[`accommodation_${i}_name`],
                         details: optMap[`accommodation_${i}_details`] || ''
                     });
+                }
+                } else {
+                    optional = null;
                 }
 
                 renderDays();
@@ -567,7 +571,8 @@
                 `;
                 container.appendChild(card);
             });
-            // Add optional Cape Wrath spoke
+            // Add optional Cape Wrath spoke (only if data exists)
+            if (!optional) return;
             const optCard = document.createElement('div');
             optCard.className = 'day-card optional';
             optCard.innerHTML = `
