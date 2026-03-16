@@ -312,7 +312,7 @@
         const SHEET_ID = new URLSearchParams(window.location.search).get('sheet');
 
         function sheetURL(tab) {
-            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=0&sheet=${encodeURIComponent(tab)}`;
+            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
         }
 
         // ── CSV PARSER ──────────────────────────────────────────
@@ -394,7 +394,7 @@
             try {
                 const loadStart = Date.now();
                 // Load config first to set title and logo
-                const configCSV = await fetch(sheetURL('Config')).then(r => r.text()).catch(() => '');
+                const configCSV = await fetch(sheetURL('Config') + '&headers=0').then(r => r.text()).catch(() => '');
                 const configData = parseCSV(configCSV);
                 const config = {};
                 configData.forEach(row => { if (row.field && row.value) config[row.field] = row.value; });
@@ -418,7 +418,7 @@
                     fetchCSV(sheetURL('Days')),
                     fetchCSV(sheetURL('Shops')),
                     fetchCSV(sheetURL('Accommodation')),
-                    fetch(sheetURL('Optional')).then(r => r.ok ? r.text() : '').catch(() => ''),
+                    fetch(sheetURL('Optional') + '&headers=0').then(r => r.ok ? r.text() : '').catch(() => ''),
                 ]);
 
                 const daysData = parseCSV(daysCSV);
