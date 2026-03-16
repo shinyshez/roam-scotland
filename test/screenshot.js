@@ -10,16 +10,16 @@ const { chromium } = require('playwright');
 const MOCK_DATA = {
   Config: `"field","value"
 "page_title","RSR Far North 2025"
-"loading_gif",""`,
+"logo",""`,
 
-  Days: `"day","title","rugged_end","rugged_distance","rugged_elevation","rolling_end","rolling_distance","rolling_elevation","surface"
-"1","Inverness → Bonar Bridge / Golspie","Golspie","121 km","1566 m","Bonar Bridge","89 km","1097 m","Road → Gravel"
-"2","Golspie → Helmsdale / Loch More","Loch More (via Forsinard)","94 km","1073 m","Helmsdale","75 km","943 m","Coastal track • Forest tracks • Moorland"
-"3","Loch More / Helmsdale → Tongue","Tongue","120 km","1120 m","Tongue","105 km","1049 m","Moorland • Estate tracks • Coastal"
-"4","Tongue → Lairg / Bonar Bridge","Bonar Bridge","130 km","1796 m","Lairg","90 km","1035 m","Road + rough tracks • River crossing (Cashel Dhu) on rugged line"
-"5","Lairg / Bonar Bridge → Ullapool","Ullapool","92 km","957 m","Ullapool","58 km","626 m","Long mixed gravel • Rough 5–6 km section (Lochan Diamh)"
-"6","Ullapool → Evanton / Glen Glass","Glen Glass / Evanton","92 km","1350 m","Evanton","90 km","1100 m","~100 km continuous gravel • Long estate tracks"
-"7","Evanton / Glen Glass → Inverness","Inverness","88 km","1145 m","Inverness","39 km","364 m","Road → Forestry → Firthside"`,
+  Days: `"day","title","rugged_end","rugged_distance","rugged_elevation","rolling_end","rolling_distance","rolling_elevation","surface","rugged_gps","rolling_gps"
+"1","Inverness → Bonar Bridge / Golspie","Golspie","121 km","1566 m","Bonar Bridge","89 km","1097 m","Road → Gravel","https://example.com/day1_rugged.gpx","https://example.com/day1_rolling.gpx"
+"2","Golspie → Helmsdale / Loch More","Loch More (via Forsinard)","94 km","1073 m","Helmsdale","75 km","943 m","Coastal track • Forest tracks • Moorland","","https://example.com/day2_rolling.gpx"
+"3","Loch More / Helmsdale → Tongue","Tongue","120 km","1120 m","Tongue","105 km","1049 m","Moorland • Estate tracks • Coastal","","",
+"4","Tongue → Lairg / Bonar Bridge","Bonar Bridge","130 km","1796 m","Lairg","90 km","1035 m","Road + rough tracks • River crossing (Cashel Dhu) on rugged line","","",
+"5","Lairg / Bonar Bridge → Ullapool","Ullapool","92 km","957 m","Ullapool","58 km","626 m","Long mixed gravel • Rough 5–6 km section (Lochan Diamh)","","",
+"6","Ullapool → Evanton / Glen Glass","Glen Glass / Evanton","92 km","1350 m","Evanton","90 km","1100 m","~100 km continuous gravel • Long estate tracks","","",
+"7","Evanton / Glen Glass → Inverness","Inverness","88 km","1145 m","Inverness","39 km","364 m","Road → Forestry → Firthside","","",`,
 
   Shops: `"day","name","rugged","rolling","opens","location","details"
 "1","Evanton Co-op","10 km","10 km","TBC","",""
@@ -72,11 +72,10 @@ const MOCK_DATA = {
 "accommodation_1_details","Distances variable, details TBC"`
 };
 
-const CHROMIUM = '/root/.cache/ms-playwright/chromium-1194/chrome-linux/chrome';
 const BASE_URL = 'http://localhost:8080/index.html?sheet=MOCK';
 
 (async () => {
-  const browser = await chromium.launch({ executablePath: CHROMIUM });
+  const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 430, height: 932 } });
 
   // Intercept Google Sheets requests and return mock data
@@ -94,6 +93,13 @@ const BASE_URL = 'http://localhost:8080/index.html?sheet=MOCK';
   });
 
   await page.goto(BASE_URL);
+
+  // Capture splash screen before it fades
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: '/tmp/screenshot_splash.png', fullPage: true });
+  console.log('Saved /tmp/screenshot_splash.png');
+
+  // Wait for splash to dismiss and main content to appear
   await page.waitForTimeout(3000);
 
   // Collapsed view

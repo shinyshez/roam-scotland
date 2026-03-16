@@ -186,6 +186,24 @@
             color: #555;
             line-height: 1.6;
         }
+        .gps-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: #000080;
+            color: #fff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            margin-top: 0.6rem;
+            margin-right: 0.5rem;
+            transition: opacity 0.2s;
+        }
+        .gps-link:hover {
+            opacity: 0.85;
+        }
         .surface-tag {
             display: inline-block;
             background: #000080;
@@ -217,22 +235,77 @@
         .warning .item-name {
             color: #ff9800;
         }
+        /* ── SPLASH SCREEN ─────────────────────────────────── */
+        .splash {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: #e8e6dc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        .splash.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .splash-logo {
+            width: 180px;
+            height: auto;
+            animation: splashEntry 0.8s ease-out both, splashPulse 2s ease-in-out 0.8s infinite;
+        }
+        .splash-text {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #000080;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeUp 0.6s ease-out 0.5s forwards;
+        }
+        .splash-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) 0.8s infinite;
+        }
+        @keyframes splashEntry {
+            from { opacity: 0; transform: scale(0.7) rotate(-8deg); }
+            to { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
+    <!-- Splash screen -->
+    <div class="splash" id="splash">
+        <img class="splash-logo" id="splash-logo" src="icon.png" alt="Roam Scotland Rally">
+        <div class="splash-text">Loading<span class="splash-dots"></span></div>
+    </div>
+
+    <div class="header" style="display:none;" id="main-header">
         <h1 id="page-title">Loading...</h1>
         <div class="route-toggle">
             <button class="toggle-btn active" data-route="rugged">⛰️ Rugged</button>
             <button class="toggle-btn" data-route="rolling">🌾 Rolling</button>
         </div>
     </div>
-    <div class="container" id="days-container">
-        <div id="loading-indicator" style="text-align:center; padding:3rem 1rem; color:#000080;">
-            <div id="loading-visual" style="font-size:2rem; margin-bottom:1rem;">⏳</div>
-            <div style="font-weight:600;">Loading route data...</div>
-        </div>
-    </div>
+    <div class="container" id="days-container" style="display:none;"></div>
     <script>
         // ── CONFIG ──────────────────────────────────────────────
         // Pass sheet ID as ?sheet=YOUR_SHEET_ID in the URL
@@ -294,8 +367,21 @@
         let optional = {};
         let currentRoute = 'rugged';
 
+        function dismissSplash() {
+            document.getElementById('splash').classList.add('hidden');
+            document.getElementById('main-header').style.display = '';
+            document.getElementById('days-container').style.display = '';
+        }
+
+        async function fetchCSV(url) {
+            const r = await fetch(url);
+            if (!r.ok) throw new Error(`Failed to fetch ${url}: ${r.status}`);
+            return r.text();
+        }
+
         async function loadData() {
             if (!SHEET_ID) {
+                dismissSplash();
                 document.getElementById('days-container').innerHTML = `
                     <div style="text-align:center; padding:3rem 1rem; color:#c00;">
                         <div style="font-size:2rem; margin-bottom:1rem;">⚠️</div>
@@ -306,7 +392,8 @@
                 return;
             }
             try {
-                // Load config first to set title and loading GIF early
+                const loadStart = Date.now();
+                // Load config first to set title and logo
                 const configCSV = await fetch(sheetURL('Config')).then(r => r.text()).catch(() => '');
                 const configData = parseCSV(configCSV);
                 const config = {};
@@ -317,17 +404,16 @@
                 document.getElementById('page-title').textContent = pageTitle;
                 document.title = pageTitle;
 
-                // Apply loading GIF if configured
-                if (config.loading_gif) {
-                    document.getElementById('loading-visual').innerHTML =
-                        `<img src="${config.loading_gif}" alt="Loading..." style="max-width:200px; border-radius:12px;">`;
+                // Apply logo to splash screen if configured
+                if (config.logo) {
+                    document.getElementById('splash-logo').src = config.logo;
                 }
 
                 const [daysCSV, shopsCSV, accCSV, optCSV] = await Promise.all([
-                    fetch(sheetURL('Days')).then(r => r.text()),
-                    fetch(sheetURL('Shops')).then(r => r.text()),
-                    fetch(sheetURL('Accommodation')).then(r => r.text()),
-                    fetch(sheetURL('Optional')).then(r => r.text()),
+                    fetchCSV(sheetURL('Days')),
+                    fetchCSV(sheetURL('Shops')),
+                    fetchCSV(sheetURL('Accommodation')),
+                    fetchCSV(sheetURL('Optional')),
                 ]);
 
                 const daysData = parseCSV(daysCSV);
@@ -355,8 +441,8 @@
                     day: parseInt(d.day),
                     emoji: d.day,
                     title: d.title,
-                    rugged: { end: d.rugged_end, distance: d.rugged_distance, elevation: d.rugged_elevation },
-                    rolling: { end: d.rolling_end, distance: d.rolling_distance, elevation: d.rolling_elevation },
+                    rugged: { end: d.rugged_end, distance: d.rugged_distance, elevation: d.rugged_elevation, gps: d.rugged_gps || '' },
+                    rolling: { end: d.rolling_end, distance: d.rolling_distance, elevation: d.rolling_elevation, gps: d.rolling_gps || '' },
                     surface: d.surface,
                     shops: (shopsByDay[d.day] || []).map(s => ({
                         name: s.name, rugged: s.rugged, rolling: s.rolling,
@@ -396,7 +482,12 @@
                 }
 
                 renderDays();
+                // Ensure splash shows for at least 1.5s, then fade to main content
+                const elapsed = Date.now() - loadStart;
+                const remaining = Math.max(0, 1500 - elapsed);
+                setTimeout(dismissSplash, remaining);
             } catch (err) {
+                dismissSplash();
                 document.getElementById('days-container').innerHTML = `
                     <div style="text-align:center; padding:3rem 1rem; color:#c00;">
                         <div style="font-size:2rem; margin-bottom:1rem;">⚠️</div>
@@ -432,6 +523,7 @@
                     <div class="day-content">
                         <div class="content-inner">
                             <div class="surface-tag">${day.surface}</div>
+                            ${routeData.gps ? `<a class="gps-link" href="${routeData.gps}" target="_blank" rel="noopener">📥 GPS File</a>` : ''}
 
                             <div class="section">
                                 <div class="section-title">🏪 Shops & Cafés</div>

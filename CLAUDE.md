@@ -47,7 +47,7 @@ Tests intercept Google Sheets requests with mock data and output screenshots to 
 
 | Tab | Key columns |
 |---|---|
-| Days | day, title, rugged_end/distance/elevation, rolling_end/distance/elevation, surface |
+| Days | day, title, rugged_end/distance/elevation/gps, rolling_end/distance/elevation/gps, surface |
 | Shops | day, name, rugged, rolling, opens, location, details |
 | Accommodation | day, name, rugged, rolling, details, location |
 | Optional | key, value (flat key-value pairs) |
