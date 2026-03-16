@@ -221,15 +221,15 @@
 </head>
 <body>
     <div class="header">
-        <h1>RSR Far North 2025</h1>
+        <h1 id="page-title">Loading...</h1>
         <div class="route-toggle">
             <button class="toggle-btn active" data-route="rugged">⛰️ Rugged</button>
             <button class="toggle-btn" data-route="rolling">🌾 Rolling</button>
         </div>
     </div>
     <div class="container" id="days-container">
-        <div style="text-align:center; padding:3rem 1rem; color:#000080;">
-            <div style="font-size:2rem; margin-bottom:1rem;">⏳</div>
+        <div id="loading-indicator" style="text-align:center; padding:3rem 1rem; color:#000080;">
+            <div id="loading-visual" style="font-size:2rem; margin-bottom:1rem;">⏳</div>
             <div style="font-weight:600;">Loading route data...</div>
         </div>
     </div>
@@ -306,6 +306,23 @@
                 return;
             }
             try {
+                // Load config first to set title and loading GIF early
+                const configCSV = await fetch(sheetURL('Config')).then(r => r.text()).catch(() => '');
+                const configData = parseCSV(configCSV);
+                const config = {};
+                configData.forEach(row => { if (row.field && row.value) config[row.field] = row.value; });
+
+                // Apply title from config
+                const pageTitle = config.page_title || 'RSR Far North 2025';
+                document.getElementById('page-title').textContent = pageTitle;
+                document.title = pageTitle;
+
+                // Apply loading GIF if configured
+                if (config.loading_gif) {
+                    document.getElementById('loading-visual').innerHTML =
+                        `<img src="${config.loading_gif}" alt="Loading..." style="max-width:200px; border-radius:12px;">`;
+                }
+
                 const [daysCSV, shopsCSV, accCSV, optCSV] = await Promise.all([
                     fetch(sheetURL('Days')).then(r => r.text()),
                     fetch(sheetURL('Shops')).then(r => r.text()),
