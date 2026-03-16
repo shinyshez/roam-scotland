@@ -115,13 +115,15 @@ const BASE_URL = 'http://localhost:8080/index.html?sheet=MOCK';
     console.log('Saved /tmp/screenshot_expanded.png');
   }
 
-  // Toggle to Rolling
+  // Toggle to Rolling (only if toggle is visible)
   const rollingBtn = await page.$('[data-route="rolling"]');
-  if (rollingBtn) {
+  if (rollingBtn && await rollingBtn.isVisible()) {
     await rollingBtn.click();
     await page.waitForTimeout(500);
     await page.screenshot({ path: '/tmp/screenshot_rolling.png', fullPage: true });
     console.log('Saved /tmp/screenshot_rolling.png');
+  } else {
+    console.log('Route toggle hidden, skipping rolling screenshot');
   }
 
   await browser.close();

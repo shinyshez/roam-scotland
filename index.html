@@ -300,7 +300,7 @@
 
     <div class="header" style="display:none;" id="main-header">
         <h1 id="page-title">Loading...</h1>
-        <div class="route-toggle">
+        <div class="route-toggle" id="route-toggle">
             <button class="toggle-btn active" data-route="rugged">⛰️ Rugged</button>
             <button class="toggle-btn" data-route="rolling">🌾 Rolling</button>
         </div>
@@ -403,6 +403,11 @@
                 const pageTitle = config.page_title || 'RSR Far North 2025';
                 document.getElementById('page-title').textContent = pageTitle;
                 document.title = pageTitle;
+
+                // Hide route toggle if configured
+                if (config.show_route_toggle === 'false') {
+                    document.getElementById('route-toggle').style.display = 'none';
+                }
 
                 // Apply logo to splash screen if configured
                 if (config.logo) {
