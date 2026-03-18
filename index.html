@@ -696,6 +696,41 @@
         window.addEventListener('appinstalled', () => {
             document.getElementById('install-btn').style.display = 'none';
         });
+        // ── DIAGNOSTICS (tap title 5× to reveal) ───────────
+        let _tapCount = 0, _tapTimer;
+        document.getElementById('page-title').addEventListener('click', () => {
+            _tapCount++;
+            clearTimeout(_tapTimer);
+            _tapTimer = setTimeout(() => _tapCount = 0, 1500);
+            if (_tapCount >= 5) {
+                _tapCount = 0;
+                const isStandalone = window.navigator.standalone === true ||
+                    window.matchMedia('(display-mode: standalone)').matches;
+                const sheetFromURL = params.get('sheet');
+                const sheetFromLS = localStorage.getItem('sheetId');
+                const swStatus = navigator.serviceWorker ?
+                    navigator.serviceWorker.controller ? 'active (controlling)' : 'registered (not controlling)' : 'unsupported';
+                const info = [
+                    `Mode: ${isStandalone ? 'STANDALONE (home screen)' : 'browser'}`,
+                    `URL: ${window.location.href}`,
+                    `Sheet from URL param: ${sheetFromURL || '(none)'}`,
+                    `Sheet from localStorage: ${sheetFromLS || '(none)'}`,
+                    `Resolved SHEET_ID: ${SHEET_ID || '(none)'}`,
+                    `Service Worker: ${swStatus}`,
+                    `Manifest href: ${document.getElementById('manifest-link').href}`,
+                    `User Agent: ${navigator.userAgent.slice(0, 80)}`,
+                ];
+                const existing = document.getElementById('debug-panel');
+                if (existing) { existing.remove(); return; }
+                const panel = document.createElement('div');
+                panel.id = 'debug-panel';
+                panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#111;color:#0f0;font:11px/1.6 monospace;padding:12px;z-index:9999;max-height:50vh;overflow:auto;';
+                panel.textContent = info.join('\n');
+                panel.style.whiteSpace = 'pre-wrap';
+                panel.addEventListener('click', () => panel.remove());
+                document.body.appendChild(panel);
+            }
+        });
         // Load data on page load
         loadData();
     </script>
