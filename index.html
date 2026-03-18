@@ -314,7 +314,10 @@
     <script>
         // ── CONFIG ──────────────────────────────────────────────
         // Pass sheet ID as ?sheet=YOUR_SHEET_ID in the URL
-        const SHEET_ID = new URLSearchParams(window.location.search).get('sheet');
+        // Persists to localStorage so PWA installs remember the sheet
+        const params = new URLSearchParams(window.location.search);
+        const SHEET_ID = params.get('sheet') || localStorage.getItem('sheetId');
+        if (SHEET_ID) localStorage.setItem('sheetId', SHEET_ID);
 
         function sheetURL(tab) {
             return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
