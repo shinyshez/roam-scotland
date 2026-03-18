@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rsr-v3';
+const CACHE_NAME = 'rsr-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',

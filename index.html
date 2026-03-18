@@ -331,19 +331,25 @@
     <div class="container" id="days-container" style="display:none;"></div>
     <script>
         // ── CONFIG ──────────────────────────────────────────────
-        // Pass sheet ID as ?sheet=YOUR_SHEET_ID in the URL
-        // Persists to localStorage so PWA installs remember the sheet
+        // Sheet ID: ?sheet= query param → #sheet= hash → localStorage fallback
+        // Hash is used because iOS standalone mode strips query params
         const params = new URLSearchParams(window.location.search);
-        const SHEET_ID = params.get('sheet') || localStorage.getItem('sheetId');
-        if (SHEET_ID) localStorage.setItem('sheetId', SHEET_ID);
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+        const SHEET_ID = params.get('sheet') || hashParams.get('sheet') || localStorage.getItem('sheetId');
+        if (SHEET_ID) {
+            localStorage.setItem('sheetId', SHEET_ID);
+            // Ensure the hash always contains the sheet ID (for iOS standalone bookmarks)
+            if (!hashParams.get('sheet')) {
+                window.location.hash = `sheet=${SHEET_ID}`;
+            }
+        }
 
         // Dynamic manifest so start_url includes the sheet param
-        // (iOS standalone apps have separate localStorage from Safari)
         if (SHEET_ID) {
             const manifest = {
                 name: 'Roam Scotland Rally',
                 short_name: 'RSR',
-                start_url: `./index.html?sheet=${SHEET_ID}`,
+                start_url: `./index.html#sheet=${SHEET_ID}`,
                 display: 'standalone',
                 background_color: '#e8e6dc',
                 theme_color: '#000080',
