@@ -331,14 +331,20 @@
     <div class="container" id="days-container" style="display:none;"></div>
     <script>
         // ── CONFIG ──────────────────────────────────────────────
-        // Sheet ID: ?sheet= query param → #sheet= hash → localStorage fallback
-        // Hash is used because iOS standalone mode strips query params
+        // Sheet ID resolution order: ?sheet= → #sheet= → cookie → localStorage
+        // Cookie is the key bridge: iOS standalone strips URL params/hash,
+        // and has separate localStorage, but shares cookies with Safari.
         const params = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.slice(1));
-        const SHEET_ID = params.get('sheet') || hashParams.get('sheet') || localStorage.getItem('sheetId');
+        function getCookie(name) {
+            const m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+            return m ? decodeURIComponent(m[1]) : null;
+        }
+        const SHEET_ID = params.get('sheet') || hashParams.get('sheet') || getCookie('sheetId') || localStorage.getItem('sheetId');
         if (SHEET_ID) {
             localStorage.setItem('sheetId', SHEET_ID);
-            // Ensure the hash always contains the sheet ID (for iOS standalone bookmarks)
+            // Cookie persists into iOS standalone mode (365 day expiry)
+            document.cookie = `sheetId=${encodeURIComponent(SHEET_ID)};max-age=${365*86400};path=/;SameSite=Lax`;
             if (!hashParams.get('sheet')) {
                 window.location.hash = `sheet=${SHEET_ID}`;
             }
@@ -713,6 +719,8 @@
                 const isStandalone = window.navigator.standalone === true ||
                     window.matchMedia('(display-mode: standalone)').matches;
                 const sheetFromURL = params.get('sheet');
+                const sheetFromHash = hashParams.get('sheet');
+                const sheetFromCookie = getCookie('sheetId');
                 const sheetFromLS = localStorage.getItem('sheetId');
                 const swStatus = navigator.serviceWorker ?
                     navigator.serviceWorker.controller ? 'active (controlling)' : 'registered (not controlling)' : 'unsupported';
@@ -720,6 +728,8 @@
                     `Mode: ${isStandalone ? 'STANDALONE (home screen)' : 'browser'}`,
                     `URL: ${window.location.href}`,
                     `Sheet from URL param: ${sheetFromURL || '(none)'}`,
+                    `Sheet from hash: ${sheetFromHash || '(none)'}`,
+                    `Sheet from cookie: ${sheetFromCookie || '(none)'}`,
                     `Sheet from localStorage: ${sheetFromLS || '(none)'}`,
                     `Resolved SHEET_ID: ${SHEET_ID || '(none)'}`,
                     `Service Worker: ${swStatus}`,
