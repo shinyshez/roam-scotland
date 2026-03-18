@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#000080">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" id="manifest-link" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
     <title>RSR Far North 2025</title>
     <style>
@@ -348,21 +348,6 @@
             if (!hashParams.get('sheet')) {
                 window.location.hash = `sheet=${SHEET_ID}`;
             }
-        }
-
-        // Dynamic manifest so start_url includes the sheet param
-        if (SHEET_ID) {
-            const manifest = {
-                name: 'Roam Scotland Rally',
-                short_name: 'RSR',
-                start_url: `./index.html#sheet=${SHEET_ID}`,
-                display: 'standalone',
-                background_color: '#e8e6dc',
-                theme_color: '#000080',
-                icons: [{ src: 'icon.png', sizes: 'any', type: 'image/png', purpose: 'any' }]
-            };
-            const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-            document.getElementById('manifest-link').href = URL.createObjectURL(blob);
         }
 
         function sheetURL(tab) {
@@ -733,7 +718,6 @@
                     `Sheet from localStorage: ${sheetFromLS || '(none)'}`,
                     `Resolved SHEET_ID: ${SHEET_ID || '(none)'}`,
                     `Service Worker: ${swStatus}`,
-                    `Manifest href: ${document.getElementById('manifest-link').href}`,
                     `User Agent: ${navigator.userAgent.slice(0, 80)}`,
                 ];
                 const existing = document.getElementById('debug-panel');
