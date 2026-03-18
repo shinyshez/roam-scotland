@@ -38,8 +38,18 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => caches.match(event.request))
     );
+  } else if (event.request.mode === 'navigate') {
+    // Page navigation: try network, fall back to cached index.html
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+          return response;
+        })
+        .catch(() => caches.match('./index.html'))
+    );
   } else {
-    // Static assets: serve from cache, update in background
+    // Other static assets: serve from cache, update in background
     event.respondWith(
       caches.match(event.request).then((cached) => {
         const fetchPromise = fetch(event.request).then((response) => {
