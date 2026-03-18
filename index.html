@@ -240,6 +240,23 @@
         .warning .item-name {
             color: #ff9800;
         }
+        .install-btn {
+            margin-top: 0.5rem;
+            padding: 0.35rem 1rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .install-btn:hover {
+            background: #fff;
+            color: #000080;
+            border-color: #fff;
+        }
         /* ── SPLASH SCREEN ─────────────────────────────────── */
         .splash {
             position: fixed;
@@ -309,6 +326,7 @@
             <button class="toggle-btn active" data-route="rugged">⛰️ Rugged</button>
             <button class="toggle-btn" data-route="rolling">🌾 Rolling</button>
         </div>
+        <button class="install-btn" id="install-btn" style="display:none;" onclick="installApp()">Install App</button>
     </div>
     <div class="container" id="days-container" style="display:none;"></div>
     <script>
@@ -644,6 +662,24 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js').catch(() => {});
         }
+        // PWA install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-btn').style.display = '';
+        });
+        function installApp() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(() => {
+                deferredPrompt = null;
+                document.getElementById('install-btn').style.display = 'none';
+            });
+        }
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('install-btn').style.display = 'none';
+        });
         // Load data on page load
         loadData();
     </script>
