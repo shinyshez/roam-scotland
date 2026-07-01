@@ -237,6 +237,9 @@
         // ── CONFIG ──────────────────────────────────────────────
         // Pass sheet ID as ?sheet=YOUR_SHEET_ID in the URL
         const SHEET_ID = new URLSearchParams(window.location.search).get('sheet');
+        // Override the word shown before each number, e.g. ?label=Section.
+        // Falls back to a per-row "label" column in the Days sheet, then "Day".
+        const LABEL_OVERRIDE = new URLSearchParams(window.location.search).get('label');
 
         function sheetURL(tab) {
             return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv&sheet=${encodeURIComponent(tab)}`;
@@ -337,6 +340,7 @@
                 days = daysData.map(d => ({
                     day: parseInt(d.day),
                     emoji: d.day,
+                    label: d.label,
                     title: d.title,
                     rugged: { end: d.rugged_end, distance: d.rugged_distance, elevation: d.rugged_elevation },
                     rolling: { end: d.rolling_end, distance: d.rolling_distance, elevation: d.rolling_elevation },
@@ -403,7 +407,7 @@
                     <div class="day-header" onclick="toggleDay(${index})">
                         <div class="day-icon">${day.emoji}</div>
                         <div class="day-info">
-                            <div class="day-title">Day ${day.day}</div>
+                            <div class="day-title">${day.label || LABEL_OVERRIDE || 'Day'} ${day.day}</div>
                             <div class="day-route">${day.title.split('→')[0].trim()} → ${routeData.end}</div>
                             <div class="stats">
                                 <div class="stat"><span class="stat-icon">📏</span> ${routeData.distance}</div>
