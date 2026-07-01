@@ -22,7 +22,7 @@ Create a Google Sheet with four tabs:
 
 | Tab | Columns |
 |---|---|
-| `Days` | day, title, rugged_end, rugged_distance, rugged_elevation, rolling_end, rolling_distance, rolling_elevation, surface |
+| `Days` | day, title, rugged_end, rugged_distance, rugged_elevation, rolling_end, rolling_distance, rolling_elevation, surface, _label (optional)_ |
 | `Shops` | day, name, rugged, rolling, opens, location, details |
 | `Accommodation` | day, name, rugged, rolling, details, location |
 | `Optional` | key, value |
@@ -45,6 +45,20 @@ For local development:
 python3 -m http.server 8000
 # then open http://localhost:8000/index.html?sheet=YOUR_SHEET_ID
 ```
+
+### Customising the "Day" label
+
+By default each card is titled `Day 1`, `Day 2`, and so on. For routes that
+aren't split into days you can change this word to something like `Section`,
+`Leg`, or `Stage` in two ways:
+
+- **Per sheet** — add an optional `label` column to the `Days` tab. Any non-empty
+  value in a row overrides the word for that row (mixing is allowed, e.g. `Day`
+  for some rows and `Section` for others).
+- **Per link** — add `&label=Section` to the URL. This applies to every card
+  that doesn't set its own `label` column value.
+
+Resolution order is: the row's `label` column → the `label` URL parameter → `Day`.
 
 ## Project Structure
 
