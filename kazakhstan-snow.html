@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>December Snow Depth in Kazakhstan vs ENSO</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0: #f4f3ef;
+    --surface-1: #fcfcfb;
+    --border:    #dedcd4;
+    --grid:      #e9e7e0;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #7b7a74;
+    --elnino:  #e34948;
+    --lanina:  #2a78d6;
+    --neutral: #8a8981;
+    --unknown: #c9c7bf;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-0: #111110;
+      --surface-1: #1a1a19;
+      --border:    #33332f;
+      --grid:      #2b2b28;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #8d8c83;
+      --elnino:  #e66767;
+      --lanina:  #3987e5;
+      --neutral: #6b6a64;
+      --unknown: #3d3c38;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #111110;
+    --surface-1: #1a1a19;
+    --border:    #33332f;
+    --grid:      #2b2b28;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #8d8c83;
+    --elnino:  #e66767;
+    --lanina:  #3987e5;
+    --neutral: #6b6a64;
+    --unknown: #3d3c38;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    line-height: 1.5;
+    padding-bottom: 3rem;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+  header { margin-bottom: 1.25rem; }
+  h1 { font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 0.35rem; }
+  .standfirst { color: var(--text-secondary); font-size: 0.95rem; max-width: 62ch; }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* ---- filters: one row above the chart ---- */
+  .filters { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 0.25rem; }
+  .field label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  select, input[type="number"], button {
+    font: inherit;
+    font-size: 0.88rem;
+    padding: 0.35rem 0.5rem;
+    background: var(--surface-1);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+  }
+  input[type="number"] { width: 5.5rem; }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--text-muted); }
+  .years { display: flex; gap: 0.4rem; align-items: center; }
+  .years span { color: var(--text-muted); font-size: 0.8rem; }
+
+  /* ---- stat tiles ---- */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 0.95rem; }
+  .tile .k { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; }
+  .tile .v { font-size: 1.7rem; font-weight: 600; letter-spacing: -0.02em; margin-top: 0.15rem; }
+  .tile .s { font-size: 0.78rem; color: var(--text-secondary); }
+  .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+  .verdict { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 0; }
+  .verdict .k { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-right: 0.5rem; }
+  .verdict b { color: var(--text-primary); }
+
+  /* ---- legend ---- */
+  .legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.6rem; }
+  .legend .item { display: flex; align-items: center; gap: 0.4rem; }
+
+  .chart-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .chart-title { font-size: 1rem; font-weight: 600; }
+  .chart-sub { font-size: 0.82rem; color: var(--text-muted); }
+
+  .plot-scroll { overflow-x: auto; position: relative; }
+  svg { display: block; width: 100%; min-width: 720px; height: auto; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .axis-text { fill: var(--text-muted); font-size: 11px; font-family: inherit; }
+  .label-text { fill: var(--text-secondary); font-size: 10.5px; font-family: inherit; font-weight: 600; }
+  .mean-line { stroke: var(--text-muted); stroke-width: 1; stroke-opacity: 0.55; }
+
+  .tooltip {
+    position: absolute; pointer-events: none; opacity: 0;
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.5rem 0.6rem; font-size: 0.8rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18); transition: opacity 0.1s; z-index: 5;
+    min-width: 160px;
+  }
+  .tooltip .tt-y { font-weight: 700; margin-bottom: 0.15rem; }
+  .tooltip .tt-row { display: flex; justify-content: space-between; gap: 1rem; color: var(--text-secondary); }
+  .tooltip .tt-row b { color: var(--text-primary); font-weight: 600; }
+
+  /* ---- status / progress ---- */
+  .status { font-size: 0.85rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .bar-track { flex: 1 1 160px; height: 5px; background: var(--grid); border-radius: 3px; overflow: hidden; min-width: 120px; }
+  .bar-fill { height: 100%; width: 0%; background: var(--lanina); transition: width 0.2s; }
+  .error { color: var(--elnino); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  th, td { text-align: right; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--grid); }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--text-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  details > summary { cursor: pointer; font-size: 0.88rem; color: var(--text-secondary); }
+  .table-scroll { max-height: 340px; overflow-y: auto; margin-top: 0.6rem; }
+
+  footer { font-size: 0.8rem; color: var(--text-muted); max-width: 78ch; }
+  footer p { margin-bottom: 0.5rem; }
+  footer a { color: inherit; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>December snow depth in Kazakhstan, by ENSO phase</h1>
+  <p class="standfirst">
+    ERA5 reanalysis snow depth for December of each year since 1950, averaged over a
+    spread of Kazakh cities. Each bar is coloured by the state of the El&nbsp;Ni&ntilde;o&ndash;Southern
+    Oscillation in the same winter.
+  </p>
+</header>
+
+<div class="card">
+  <div class="filters">
+    <div class="field">
+      <label for="region">Area</label>
+      <select id="region"></select>
+    </div>
+    <div class="field">
+      <label for="metric">Measure</label>
+      <select id="metric">
+        <option value="depthMean">Mean December snow depth</option>
+        <option value="depthMax">Deepest day in December</option>
+        <option value="snowfall">December snowfall total</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="threshold">El Ni&ntilde;o threshold (ONI)</label>
+      <select id="threshold">
+        <option value="0.5">Standard &plusmn;0.5</option>
+        <option value="1">Moderate &plusmn;1.0</option>
+        <option value="1.5">Strong &plusmn;1.5</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Years</label>
+      <div class="years">
+        <input type="number" id="yearFrom" min="1940" step="1">
+        <span>to</span>
+        <input type="number" id="yearTo" min="1940" step="1">
+      </div>
+    </div>
+    <div class="field">
+      <label>&nbsp;</label>
+      <button id="reload" type="button">Load data</button>
+    </div>
+  </div>
+  <div class="status" id="status" style="margin-top:0.8rem;">
+    <span id="statusText">Ready.</span>
+    <span class="bar-track"><span class="bar-fill" id="progress"></span></span>
+  </div>
+</div>
+
+<div class="tiles" id="tiles"></div>
+<div class="card verdict" id="verdict" style="margin-top:0.75rem;"></div>
+
+<div class="card" style="margin-top:1rem;">
+  <div class="chart-head">
+    <div>
+      <div class="chart-title" id="chartTitle">Mean December snow depth</div>
+      <div class="chart-sub" id="chartSub"></div>
+    </div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="plot-scroll" id="plotScroll">
+    <svg id="chart" role="img" aria-labelledby="chartTitle"></svg>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+</div>
+
+<div class="card">
+  <details id="tableWrap">
+    <summary>Table view &mdash; every year, with its ONI value</summary>
+    <div class="table-scroll"><table id="dataTable"></table></div>
+  </details>
+</div>
+
+<footer>
+  <p><b>Snow data</b> &mdash; ERA5 / ERA5-Land reanalysis via the
+  <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">Open-Meteo historical weather API</a>,
+  fetched by your browser when this page loads. Reanalysis snow depth is a model estimate on a
+  ~10&nbsp;km grid, not a gauge reading; treat the city values as "the grid cell containing that
+  city". Values are the mean across the selected cities, each weighted equally &mdash; that is a
+  station-style average, not an area-weighted national mean.</p>
+  <p><b>ENSO data</b> &mdash; the Oceanic Ni&ntilde;o Index (ONI), 3-month running mean SST anomaly in the
+  Ni&ntilde;o&nbsp;3.4 region. Each December is classified by the <b>NDJ</b> season centred on it, so
+  December&nbsp;1997 carries the 1997&ndash;98 El&nbsp;Ni&ntilde;o. The page first tries to pull the live table from
+  <a href="https://psl.noaa.gov/data/correlation/oni.data" target="_blank" rel="noopener">NOAA PSL</a>;
+  if that request is blocked by CORS it falls back to the snapshot bundled in this file
+  (<code>ONI_SNAPSHOT</code>) &mdash; the status line above says which is in use. To refresh the snapshot,
+  paste the December (NDJ) column from the
+  <a href="https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php" target="_blank" rel="noopener">CPC ONI table</a>.</p>
+  <p><b>Reading it</b> &mdash; ENSO's fingerprint on Central Asian winters is indirect and weak
+  compared with its grip on, say, the Pacific rim. Expect a lot of year-to-year noise and a
+  small difference between the phase averages; the significance line in the tiles is a Welch
+  t-test on those two groups and is there to keep the eye honest.</p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+/* ------------------------------------------------------------------ *
+ * Configuration
+ * ------------------------------------------------------------------ */
+
+// Cities spread across Kazakhstan. `zone` drives the Area filter.
+const SITES = [
+  { name: "Petropavl",   lat: 54.87, lon: 69.15, zone: "north" },
+  { name: "Kostanay",    lat: 53.21, lon: 63.62, zone: "north" },
+  { name: "Pavlodar",    lat: 52.29, lon: 76.97, zone: "north" },
+  { name: "Oral",        lat: 51.23, lon: 51.37, zone: "west"  },
+  { name: "Astana",      lat: 51.13, lon: 71.43, zone: "north" },
+  { name: "Semey",       lat: 50.41, lon: 80.23, zone: "east"  },
+  { name: "Aktobe",      lat: 50.28, lon: 57.17, zone: "west"  },
+  { name: "Oskemen",     lat: 49.95, lon: 82.61, zone: "east"  },
+  { name: "Karaganda",   lat: 49.80, lon: 73.10, zone: "central" },
+  { name: "Zhezkazgan",  lat: 47.80, lon: 67.71, zone: "central" },
+  { name: "Atyrau",      lat: 47.09, lon: 51.92, zone: "west"  },
+  { name: "Balkhash",    lat: 46.84, lon: 74.98, zone: "central" },
+  { name: "Taldykorgan", lat: 45.02, lon: 78.37, zone: "south" },
+  { name: "Kyzylorda",   lat: 44.85, lon: 65.51, zone: "south" },
+  { name: "Aktau",       lat: 43.65, lon: 51.16, zone: "west"  },
+  { name: "Turkistan",   lat: 43.30, lon: 68.25, zone: "south" },
+  { name: "Almaty",      lat: 43.24, lon: 76.89, zone: "south" },
+  { name: "Taraz",       lat: 42.90, lon: 71.39, zone: "south" },
+  { name: "Shymkent",    lat: 42.32, lon: 69.59, zone: "south" }
+];
+
+const AREAS = [
+  { id: "all",     label: "All Kazakhstan (19 cities)", test: () => true },
+  { id: "north",   label: "North & steppe",   test: s => s.zone === "north" },
+  { id: "central", label: "Central",          test: s => s.zone === "central" },
+  { id: "east",    label: "East (Altai foothills)", test: s => s.zone === "east" },
+  { id: "west",    label: "West (Caspian & Ural)",   test: s => s.zone === "west" },
+  { id: "south",   label: "South (Tien Shan foreland)", test: s => s.zone === "south" }
+].concat(SITES.map(s => ({ id: "site:" + s.name, label: s.name, test: x => x.name === s.name })));
+
+const METRICS = {
+  depthMean: { title: "Mean December snow depth", unit: "cm", axis: "cm", decimals: 1 },
+  depthMax:  { title: "Deepest day in December",  unit: "cm", axis: "cm", decimals: 1 },
+  snowfall:  { title: "December snowfall total",  unit: "cm", axis: "cm", decimals: 0 }
+};
+
+const ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive";
+const ONI_URL     = "https://psl.noaa.gov/data/correlation/oni.data";
+const CACHE_VERSION = "v1";
+const FIRST_YEAR = 1950;
+
+/*
+ * ONI snapshot — NDJ season (the one centred on each December), from the NOAA CPC
+ * ONI v5 table. This is a fallback only: the page prefers the live NOAA PSL file.
+ * `null` = not yet published. Refresh from:
+ * https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/ensostuff/ONI_v5.php
+ */
+const ONI_SNAPSHOT = {
+  1950: -0.8, 1951:  0.8, 1952:  0.3, 1953:  0.8, 1954: -0.7, 1955: -1.7,
+  1956: -0.4, 1957:  1.8, 1958:  0.6, 1959: -0.1, 1960: -0.1, 1961: -0.3,
+  1962: -0.5, 1963:  1.4, 1964: -0.8, 1965:  1.6, 1966: -0.3, 1967: -0.4,
+  1968:  1.0, 1969:  0.8, 1970: -1.2, 1971: -0.8, 1972:  2.1, 1973: -1.9,
+  1974: -0.6, 1975: -1.7, 1976:  0.8, 1977:  0.8, 1978: -0.1, 1979:  0.6,
+  1980: -0.1, 1981: -0.2, 1982:  2.2, 1983: -0.7, 1984: -1.0, 1985: -0.4,
+  1986:  1.2, 1987:  1.1, 1988: -1.7, 1989:  0.1, 1990:  0.4, 1991:  1.4,
+  1992:  0.1, 1993:  0.1, 1994:  1.1, 1995: -0.9, 1996: -0.4, 1997:  2.4,
+  1998: -1.5, 1999: -1.7, 2000: -0.7, 2001: -0.2, 2002:  1.1, 2003:  0.4,
+  2004:  0.7, 2005: -0.8, 2006:  0.9, 2007: -1.5, 2008: -0.7, 2009:  1.6,
+  2010: -1.5, 2011: -0.9, 2012: -0.2, 2013: -0.3, 2014:  0.7, 2015:  2.6,
+  2016: -0.6, 2017: -0.9, 2018:  0.9, 2019:  0.5, 2020: -1.2, 2021: -1.0,
+  2022: -0.9, 2023:  2.0, 2024: -0.6, 2025: null
+};
+
+/* ------------------------------------------------------------------ *
+ * State
+ * ------------------------------------------------------------------ */
+
+const state = {
+  oni: Object.assign({}, ONI_SNAPSHOT),
+  oniSource: "bundled snapshot",
+  years: [],          // [{ year, depthMean, depthMax, snowfall, perSite: {...} }]
+  loading: false
+};
+
+const el = id => document.getElementById(id);
+const fmt = (v, d) => (v === null || v === undefined || Number.isNaN(v)) ? "—" : v.toFixed(d);
+
+/* ------------------------------------------------------------------ *
+ * ONI
+ * ------------------------------------------------------------------ */
+
+// NOAA PSL `oni.data`: a header line of "<firstYear> <lastYear>", then one row
+// per year of 12 seasonal values indexed by centre month, so column 12 is NDJ.
+function parseOni(text) {
+  const out = {};
+  for (const line of text.split("\n")) {
+    const t = line.trim().split(/\s+/);
+    if (t.length !== 13) continue;
+    const year = parseInt(t[0], 10);
+    if (!Number.isFinite(year) || year < 1800 || year > 2200) continue;
+    const ndj = parseFloat(t[12]);
+    if (Number.isFinite(ndj) && ndj > -50) out[year] = Math.round(ndj * 100) / 100;
+  }
+  return out;
+}
+
+async function loadOni() {
+  try {
+    const res = await fetch(ONI_URL, { cache: "no-cache" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const parsed = parseOni(await res.text());
+    if (Object.keys(parsed).length > 50) {
+      state.oni = parsed;
+      state.oniSource = "live NOAA PSL feed";
+      return;
+    }
+    throw new Error("unrecognised format");
+  } catch (err) {
+    // Cross-origin requests to NOAA are usually blocked; the snapshot covers it.
+    state.oni = Object.assign({}, ONI_SNAPSHOT);
+    state.oniSource = "bundled snapshot (live NOAA fetch unavailable)";
+  }
+}
+
+function phaseOf(year, threshold) {
+  const v = state.oni[year];
+  if (v === null || v === undefined) return "unknown";
+  if (v >= threshold) return "elnino";
+  if (v <= -threshold) return "lanina";
+  return "neutral";
+}
+
+const PHASE_META = {
+  elnino:  { label: "El Niño",  css: "--elnino"  },
+  lanina:  { label: "La Niña",  css: "--lanina"  },
+  neutral: { label: "Neutral",       css: "--neutral" },
+  unknown: { label: "No ONI value",  css: "--unknown" }
+};
+
+/* ------------------------------------------------------------------ *
+ * Snow data
+ * ------------------------------------------------------------------ */
+
+function sitesKey(sites) {
+  return sites.map(s => s.lat.toFixed(2) + "," + s.lon.toFixed(2)).join("|");
+}
+
+function cacheKey(year) {
+  return "kzsnow:" + CACHE_VERSION + ":" + sitesKey(SITES) + ":" + year;
+}
+
+function readCache(year) {
+  try {
+    const raw = localStorage.getItem(cacheKey(year));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function writeCache(year, value) {
+  try { localStorage.setItem(cacheKey(year), JSON.stringify(value)); } catch (e) { /* quota */ }
+}
+
+const mean = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+
+// One request covers every site for a single December. Open-Meteo returns a bare
+// object for a single coordinate and an array when several are passed.
+async function fetchYear(year) {
+  const cached = readCache(year);
+  if (cached) return cached;
+
+  const params = new URLSearchParams({
+    latitude: SITES.map(s => s.lat).join(","),
+    longitude: SITES.map(s => s.lon).join(","),
+    start_date: year + "-12-01",
+    end_date: year + "-12-31",
+    daily: "snow_depth_max,snowfall_sum",
+    timezone: "UTC"
+  });
+
+  let payload = await getJson(ARCHIVE_URL + "?" + params);
+  let usedHourly = false;
+
+  // Older API builds don't expose snow_depth_max as a daily aggregation; fall
+  // back to the hourly snow_depth field and aggregate here.
+  if (payload && payload.error && /snow_depth_max/.test(payload.reason || "")) {
+    params.set("daily", "snowfall_sum");
+    params.set("hourly", "snow_depth");
+    payload = await getJson(ARCHIVE_URL + "?" + params);
+    usedHourly = true;
+  }
+  if (payload && payload.error) throw new Error(payload.reason || "API error");
+
+  const blocks = Array.isArray(payload) ? payload : [payload];
+  const perSite = blocks.map((b, i) => {
+    let depths;
+    if (usedHourly) {
+      const hourly = (b.hourly && b.hourly.snow_depth) || [];
+      const byDay = new Map();
+      hourly.forEach((v, h) => {
+        if (v === null) return;
+        const day = Math.floor(h / 24);
+        byDay.set(day, Math.max(byDay.get(day) ?? -Infinity, v));
+      });
+      depths = [...byDay.values()];
+    } else {
+      depths = ((b.daily && b.daily.snow_depth_max) || []).filter(v => v !== null);
+    }
+    const snow = ((b.daily && b.daily.snowfall_sum) || []).filter(v => v !== null);
+    const toCm = v => v * 100; // Open-Meteo reports snow depth in metres
+    return {
+      name: SITES[i] ? SITES[i].name : "site " + i,
+      depthMean: depths.length ? toCm(mean(depths)) : null,
+      depthMax:  depths.length ? toCm(Math.max(...depths)) : null,
+      snowfall:  snow.length ? snow.reduce((a, b2) => a + b2, 0) : null // already cm
+    };
+  });
+
+  writeCache(year, perSite);
+  return perSite;
+}
+
+async function getJson(url) {
+  const res = await fetch(url);
+  const body = await res.json().catch(() => null);
+  if (!res.ok && !(body && body.error)) throw new Error("HTTP " + res.status);
+  return body;
+}
+
+// Bounded concurrency: kind to the free API tier, and lets the chart fill in
+// progressively rather than blocking on the whole 76-year sweep.
+async function loadRange(from, to, onProgress) {
+  const wanted = [];
+  for (let y = from; y <= to; y++) wanted.push(y);
+
+  const results = new Map();
+  let done = 0;
+  const queue = wanted.slice();
+  const failures = [];
+
+  async function worker() {
+    while (queue.length) {
+      const year = queue.shift();
+      try {
+        results.set(year, await fetchYear(year));
+      } catch (err) {
+        failures.push(year + ": " + err.message);
+      }
+      onProgress(++done, wanted.length);
+    }
+  }
+
+  await Promise.all(Array.from({ length: 6 }, worker));
+  if (!results.size) throw new Error(failures[0] || "no data returned");
+  return { results, failures };
+}
+
+/* ------------------------------------------------------------------ *
+ * Aggregation
+ * ------------------------------------------------------------------ */
+
+function activeSites() {
+  const area = AREAS.find(a => a.id === el("region").value) || AREAS[0];
+  return SITES.filter(area.test);
+}
+
+function seriesFor(metric) {
+  const keep = new Set(activeSites().map(s => s.name));
+  return state.years.map(row => {
+    const vals = row.perSite.filter(s => keep.has(s.name) && s[metric] !== null).map(s => s[metric]);
+    return { year: row.year, value: vals.length ? mean(vals) : null };
+  }).filter(d => d.value !== null);
+}
+
+function groupStats(series, threshold) {
+  const groups = { elnino: [], lanina: [], neutral: [], unknown: [] };
+  series.forEach(d => groups[phaseOf(d.year, threshold)].push(d.value));
+  const summary = {};
+  for (const k of Object.keys(groups)) {
+    const v = groups[k];
+    summary[k] = { n: v.length, mean: v.length ? mean(v) : null, values: v };
+  }
+  return summary;
+}
+
+// Welch's t-test, with a normal approximation for the p-value. Sample sizes here
+// are ~15–20 per phase, so this is indicative rather than decisive.
+function welch(a, b) {
+  if (a.length < 3 || b.length < 3) return null;
+  const ma = mean(a), mb = mean(b);
+  const va = a.reduce((s, x) => s + (x - ma) ** 2, 0) / (a.length - 1);
+  const vb = b.reduce((s, x) => s + (x - mb) ** 2, 0) / (b.length - 1);
+  const se = Math.sqrt(va / a.length + vb / b.length);
+  if (!se) return null;
+  const t = (ma - mb) / se;
+  const p = 2 * (1 - normalCdf(Math.abs(t)));
+  return { t, p, diff: ma - mb };
+}
+
+function normalCdf(z) {
+  // Abramowitz & Stegun 7.1.26 applied to erf.
+  const s = z < 0 ? -1 : 1;
+  const x = Math.abs(z) / Math.SQRT2;
+  const t = 1 / (1 + 0.3275911 * x);
+  const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+  return 0.5 * (1 + s * y);
+}
+
+/* ------------------------------------------------------------------ *
+ * Rendering
+ * ------------------------------------------------------------------ */
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) node.setAttribute(k, attrs[k]);
+  return node;
+}
+
+function niceTicks(max) {
+  if (!(max > 0)) return [0, 1];
+  const raw = max / 4;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw) || 10 * mag;
+  const ticks = [];
+  // Run past `max`, never up to it: the top tick is the axis maximum, so stopping
+  // short would let the tallest bar overflow the plot.
+  for (let v = 0; v < max + step; v += step) {
+    ticks.push(Math.round(v * 1000) / 1000);
+    if (v >= max) break;
+  }
+  return ticks;
+}
+
+function roundedBar(x, y, w, h, r) {
+  const rr = Math.max(0, Math.min(r, w / 2, h));
+  return "M" + x + "," + (y + h) +
+         "L" + x + "," + (y + rr) +
+         "Q" + x + "," + y + " " + (x + rr) + "," + y +
+         "L" + (x + w - rr) + "," + y +
+         "Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + rr) +
+         "L" + (x + w) + "," + (y + h) + "Z";
+}
+
+function renderChart(series, metric, threshold) {
+  const svg = el("chart");
+  svg.innerHTML = "";
+  if (!series.length) return;
+
+  const SLOT = 14, GAP = 2;
+  const M = { top: 24, right: 78, bottom: 34, left: 46 };
+  const plotW = series.length * SLOT;
+  const plotH = 260;
+  const W = M.left + plotW + M.right;
+  const H = M.top + plotH + M.bottom;
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.style.minWidth = Math.min(W, 900) + "px";
+
+  const maxVal = Math.max(...series.map(d => d.value));
+  const ticks = niceTicks(maxVal);
+  const yMax = ticks[ticks.length - 1];
+  const y = v => M.top + plotH - (v / yMax) * plotH;
+  const dec = METRICS[metric].decimals;
+
+  // Recessive grid, drawn first so bars sit on top.
+  ticks.forEach(t => {
+    svg.appendChild(svgEl("line", { class: "grid-line", x1: M.left, x2: M.left + plotW, y1: y(t), y2: y(t) }));
+    const label = svgEl("text", { class: "axis-text", x: M.left - 8, y: y(t) + 3.5, "text-anchor": "end" });
+    label.textContent = t;
+    svg.appendChild(label);
+  });
+
+  const unitLabel = svgEl("text", { class: "axis-text", x: M.left - 8, y: M.top - 7, "text-anchor": "end" });
+  unitLabel.textContent = METRICS[metric].axis;
+  svg.appendChild(unitLabel);
+
+  // Period mean, for context behind the bars.
+  const periodMean = mean(series.map(d => d.value));
+  svg.appendChild(svgEl("line", { class: "mean-line", x1: M.left, x2: M.left + plotW, y1: y(periodMean), y2: y(periodMean) }));
+  const meanTag = svgEl("text", { class: "axis-text", x: M.left + plotW + 6, y: y(periodMean) + 3.5, "text-anchor": "start" });
+  meanTag.textContent = "mean " + fmt(periodMean, dec);
+  svg.appendChild(meanTag);
+
+  const extremes = { hi: series[0], lo: series[0] };
+  series.forEach(d => {
+    if (d.value > extremes.hi.value) extremes.hi = d;
+    if (d.value < extremes.lo.value) extremes.lo = d;
+  });
+
+  series.forEach((d, i) => {
+    const phase = phaseOf(d.year, threshold);
+    const x = M.left + i * SLOT + GAP / 2;
+    const w = SLOT - GAP;
+    const h = Math.max(1, M.top + plotH - y(d.value));
+    const bar = svgEl("path", {
+      d: roundedBar(x, y(d.value), w, h, 3),
+      fill: "var(" + PHASE_META[phase].css + ")"
+    });
+    svg.appendChild(bar);
+
+    // Direct-label only the extremes; the tooltip and table carry the rest.
+    if (d === extremes.hi || d === extremes.lo) {
+      const tag = svgEl("text", { class: "label-text", x: x + w / 2, y: y(d.value) - 6, "text-anchor": "middle" });
+      tag.textContent = fmt(d.value, dec);
+      svg.appendChild(tag);
+    }
+
+    if (d.year % 5 === 0) {
+      const tick = svgEl("text", { class: "axis-text", x: x + w / 2, y: M.top + plotH + 16, "text-anchor": "middle" });
+      tick.textContent = d.year;
+      svg.appendChild(tick);
+    }
+
+    // Hit target spans the full plot height, wider than the bar itself.
+    const hit = svgEl("rect", { x: M.left + i * SLOT, y: M.top, width: SLOT, height: plotH, fill: "transparent" });
+    hit.addEventListener("pointerenter", ev => showTooltip(ev, d, phase, metric));
+    hit.addEventListener("pointermove", ev => showTooltip(ev, d, phase, metric));
+    hit.addEventListener("pointerleave", hideTooltip);
+    svg.appendChild(hit);
+  });
+
+  const axis = svgEl("line", { class: "grid-line", x1: M.left, x2: M.left + plotW, y1: M.top + plotH, y2: M.top + plotH });
+  svg.appendChild(axis);
+}
+
+function showTooltip(ev, d, phase, metric) {
+  const tip = el("tooltip");
+  const oni = state.oni[d.year];
+  tip.innerHTML =
+    '<div class="tt-y">December ' + d.year + "</div>" +
+    '<div class="tt-row"><span>' + METRICS[metric].title + "</span><b>" + fmt(d.value, METRICS[metric].decimals) + " " + METRICS[metric].unit + "</b></div>" +
+    '<div class="tt-row"><span>ONI (NDJ)</span><b>' + (oni === null || oni === undefined ? "—" : (oni > 0 ? "+" : "") + oni.toFixed(1)) + "</b></div>" +
+    '<div class="tt-row"><span>Phase</span><b>' + PHASE_META[phase].label + "</b></div>";
+  const box = el("plotScroll").getBoundingClientRect();
+  const x = ev.clientX - box.left + el("plotScroll").scrollLeft;
+  const y = ev.clientY - box.top;
+  tip.style.opacity = "1";
+  tip.style.left = Math.min(x + 14, el("plotScroll").scrollLeft + box.width - tip.offsetWidth - 8) + "px";
+  tip.style.top = Math.max(0, y - tip.offsetHeight - 12) + "px";
+}
+
+function hideTooltip() { el("tooltip").style.opacity = "0"; }
+
+function renderLegend(threshold, series) {
+  const keys = ["elnino", "neutral", "lanina"];
+  if (series.some(d => phaseOf(d.year, threshold) === "unknown")) keys.push("unknown");
+  const bits = keys.map(k =>
+    '<span class="item"><span class="dot" style="background:var(' + PHASE_META[k].css + ')"></span>' + PHASE_META[k].label + "</span>"
+  );
+  const t = threshold.toFixed(1);
+  bits.push('<span class="item" style="color:var(--text-muted)">ONI &ge; +' + t + " = El Niño, &le; −" + t + " = La Niña</span>");
+  el("legend").innerHTML = bits.join("");
+}
+
+function renderTiles(summary, metric) {
+  const dec = METRICS[metric].decimals;
+  const unit = METRICS[metric].unit;
+  const cards = ["elnino", "neutral", "lanina"].map(k => {
+    const g = summary[k];
+    return '<div class="tile">' +
+      '<div class="k"><span class="dot" style="background:var(' + PHASE_META[k].css + ')"></span>' + PHASE_META[k].label + " Decembers</div>" +
+      '<div class="v">' + fmt(g.mean, dec) + " <span style='font-size:0.9rem;font-weight:500'>" + unit + "</span></div>" +
+      '<div class="s">' + g.n + " year" + (g.n === 1 ? "" : "s") + "</div></div>";
+  });
+
+  const test = welch(summary.elnino.values, summary.lanina.values);
+  let verdict;
+  if (!test) {
+    verdict = "Not enough years in both groups to compare.";
+  } else {
+    const dir = test.diff >= 0 ? "more" : "less";
+    verdict = "El Niño Decembers average <b>" + fmt(Math.abs(test.diff), dec + 1) + " " + unit + " " + dir +
+      "</b> than La Niña Decembers &mdash; " +
+      (test.p < 0.05 ? "significant at p&nbsp;=&nbsp;" + test.p.toFixed(3)
+                     : "not statistically significant (p&nbsp;=&nbsp;" + test.p.toFixed(2) + ")") + ".";
+  }
+  el("tiles").innerHTML = cards.join("");
+  el("verdict").innerHTML = '<span class="k">El Niño &minus; La Niña</span> ' + verdict;
+}
+
+function renderTable(series, metric, threshold) {
+  const dec = METRICS[metric].decimals;
+  const rows = series.map(d => {
+    const phase = phaseOf(d.year, threshold);
+    const oni = state.oni[d.year];
+    return "<tr><td>" + d.year + "</td><td>" + fmt(d.value, dec) + "</td><td>" +
+      (oni === null || oni === undefined ? "—" : (oni > 0 ? "+" : "") + oni.toFixed(1)) +
+      "</td><td>" + PHASE_META[phase].label + "</td></tr>";
+  });
+  el("dataTable").innerHTML =
+    "<thead><tr><th>December</th><th>" + METRICS[metric].title + " (" + METRICS[metric].unit + ")</th>" +
+    "<th>ONI (NDJ)</th><th>Phase</th></tr></thead><tbody>" + rows.join("") + "</tbody>";
+}
+
+function draw() {
+  const metric = el("metric").value;
+  const threshold = parseFloat(el("threshold").value);
+  const from = parseInt(el("yearFrom").value, 10);
+  const to = parseInt(el("yearTo").value, 10);
+  const series = seriesFor(metric).filter(d => d.year >= from && d.year <= to);
+
+  el("chartTitle").textContent = METRICS[metric].title;
+  const area = AREAS.find(a => a.id === el("region").value) || AREAS[0];
+  el("chartSub").textContent = series.length
+    ? area.label + " · " + series[0].year + "–" + series[series.length - 1].year +
+      " · ENSO phase from the " + state.oniSource
+    : "No data loaded yet.";
+
+  renderLegend(threshold, series);
+  renderChart(series, metric, threshold);
+  renderTiles(groupStats(series, threshold), metric);
+  renderTable(series, metric, threshold);
+}
+
+/* ------------------------------------------------------------------ *
+ * Wiring
+ * ------------------------------------------------------------------ */
+
+function setStatus(text, isError) {
+  el("statusText").textContent = text;
+  el("statusText").className = isError ? "error" : "";
+}
+
+function setProgress(done, total) {
+  el("progress").style.width = total ? Math.round((done / total) * 100) + "%" : "0%";
+}
+
+async function load() {
+  if (state.loading) return;
+  state.loading = true;
+  el("reload").disabled = true;
+
+  const from = Math.max(1940, parseInt(el("yearFrom").value, 10) || FIRST_YEAR);
+  const to = Math.max(from, parseInt(el("yearTo").value, 10) || FIRST_YEAR);
+
+  setStatus("Fetching ERA5 December snow depth, " + from + "–" + to + "…");
+  setProgress(0, 1);
+
+  try {
+    const { results, failures } = await loadRange(from, to, (d, t) => {
+      setProgress(d, t);
+      setStatus("Fetching December " + from + "–" + to + " — " + d + " of " + t + " years…");
+    });
+    state.years = [...results.keys()].sort((a, b) => a - b)
+      .map(year => ({ year, perSite: results.get(year) }));
+    setStatus(state.years.length + " Decembers loaded. ENSO phase from the " + state.oniSource +
+      (failures.length ? " · " + failures.length + " year(s) failed to load." : ""));
+    draw();
+  } catch (err) {
+    setStatus("Could not load snow data: " + err.message +
+      " — this page needs internet access to open-meteo.com. Serve it over http:// rather than opening the file directly.", true);
+  } finally {
+    state.loading = false;
+    el("reload").disabled = false;
+  }
+}
+
+function init() {
+  el("region").innerHTML = AREAS.map(a => '<option value="' + a.id + '">' + a.label + "</option>").join("");
+
+  const now = new Date();
+  const lastDecember = now.getMonth() >= 11 ? now.getFullYear() : now.getFullYear() - 1;
+  el("yearFrom").value = FIRST_YEAR;
+  el("yearTo").value = lastDecember;
+  el("yearFrom").max = lastDecember;
+  el("yearTo").max = lastDecember;
+
+  ["region", "metric", "threshold"].forEach(id => el(id).addEventListener("change", draw));
+  ["yearFrom", "yearTo"].forEach(id => el(id).addEventListener("change", () => {
+    if (state.years.length) draw();
+  }));
+  el("reload").addEventListener("click", load);
+
+  loadOni().then(load);
+}
+
+init();
+</script>
+</body>
+</html>

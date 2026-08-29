@@ -64,12 +64,29 @@ Resolution order is: the row's `label` column → the `label` URL parameter → 
 
 ```
 index.html          # Complete application (HTML + CSS + JS)
+kazakhstan-snow.html  # Standalone: December snow depth in Kazakhstan vs ENSO
 csv/                # Sample CSV data files
   days.csv
   shops.csv
   accommodation.csv
   optional.csv
 ```
+
+## Kazakhstan snow chart
+
+`kazakhstan-snow.html` is a separate, self-contained page, unrelated to the route
+guide: it charts ERA5 December snow depth across Kazakh cities since 1950 with each
+year coloured by its ENSO phase (El Niño / neutral / La Niña). It fetches the snow
+data from the Open-Meteo historical weather API in the browser, so serve it over
+`http://` rather than opening the file directly:
+
+```bash
+python3 -m http.server 8000
+# then open http://localhost:8000/kazakhstan-snow.html
+```
+
+The first load fetches one December per request and caches the results in
+`localStorage`; later loads are instant.
 
 ## Tech Stack
 
