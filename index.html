@@ -36,6 +36,24 @@
         }
         .header .subtitle {
             display: none;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.85);
+            margin-top: 0.25rem;
+        }
+        .header .subtitle.shown {
+            display: block;
+        }
+        .toggle-src {
+            display: none;
+            justify-content: center;
+            gap: 0.35rem;
+            margin-top: 0.4rem;
+        }
+        body.edit-mode .toggle-src {
+            display: flex;
+        }
+        .toggle-src .src {
+            margin-left: 0;
         }
         .route-toggle {
             display: flex;
@@ -148,7 +166,7 @@
             transition: max-height 0.3s ease;
         }
         .day-card.expanded .day-content {
-            max-height: 2000px;
+            max-height: 4000px;
         }
         .content-inner {
             padding: 0 1.2rem 1.2rem;
@@ -186,6 +204,9 @@
             color: #555;
             line-height: 1.6;
         }
+        .detail {
+            margin-bottom: 0.1rem;
+        }
         .surface-tag {
             display: inline-block;
             background: #000080;
@@ -217,37 +238,396 @@
         .warning .item-name {
             color: #ff9800;
         }
+
+        /* ── Edit-mode affordances ──────────────────────────────── */
+        .edit-toggle {
+            position: absolute;
+            top: 0.6rem;
+            right: 0.7rem;
+            background: rgba(255, 255, 255, 0.18);
+            border: 1.5px solid rgba(255, 255, 255, 0.45);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.28rem 0.6rem;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+        body.edit-mode .edit-toggle {
+            background: #fff;
+            color: #000080;
+        }
+        /* Give the toggle its own band so it never sits on the title badge. */
+        body.edit-mode .header {
+            padding-top: 2.3rem;
+        }
+        .editbar {
+            display: none;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            justify-content: center;
+            align-items: center;
+            margin-top: 0.6rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        body.edit-mode .editbar {
+            display: flex;
+        }
+        .editbar button, .editbar a {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.3rem 0.7rem;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .editbar .loaded-at {
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.8);
+            width: 100%;
+        }
+        /* Source badge: which tab + column feeds this value */
+        .src {
+            display: none;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            text-transform: none;
+            background: #000080;
+            color: #fff;
+            padding: 0.08rem 0.35rem;
+            border-radius: 5px;
+            margin-left: 0.35rem;
+            text-decoration: none;
+            vertical-align: middle;
+            white-space: nowrap;
+            opacity: 0.9;
+        }
+        body.edit-mode .src {
+            display: inline-block;
+        }
+        .src:hover {
+            opacity: 1;
+            box-shadow: 0 0 0 2px rgba(0, 0, 128, 0.25);
+        }
+        .header .src {
+            background: #fff;
+            color: #000080;
+        }
+        .ghost {
+            color: #9a9a9a;
+            font-style: italic;
+        }
+        .is-empty {
+            display: none;
+        }
+        body.edit-mode .detail.is-empty,
+        body.edit-mode div.is-empty {
+            display: block;
+        }
+        body.edit-mode .stat.is-empty {
+            display: flex;
+        }
+        body.edit-mode span.is-empty {
+            display: inline;
+        }
+        .ghost-note {
+            display: none;
+            background: #fffdf3;
+            border: 1px dashed #c8a03c;
+            color: #7a5c12;
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            line-height: 1.5;
+        }
+        body.edit-mode .ghost-note {
+            display: block;
+        }
+        .ghost-note code, .banner code, .help-panel code {
+            background: rgba(0, 0, 0, 0.07);
+            padding: 0.05rem 0.3rem;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+        /* Validation banner */
+        .banner {
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.8rem;
+            line-height: 1.55;
+        }
+        .banner h3 {
+            font-size: 0.8rem;
+            margin-bottom: 0.4rem;
+        }
+        .banner ul {
+            padding-left: 1.1rem;
+        }
+        .banner.error {
+            background: #fdecea;
+            border: 2px solid #c62828;
+            color: #7f1d1d;
+        }
+        .banner.warn {
+            background: #fff8e1;
+            border: 2px solid #ff9800;
+            color: #7a5c12;
+        }
+        .banner.hint {
+            background: #fff;
+            border: 1px dashed #000080;
+            color: #000080;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+        }
+        /* Field reference panel */
+        .help-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+        .help-overlay.open {
+            display: block;
+        }
+        .help-panel {
+            background: #fff;
+            max-width: 640px;
+            margin: 1rem auto;
+            border-radius: 16px;
+            padding: 1.2rem;
+            border: 2px solid #000080;
+        }
+        .help-panel h2 {
+            font-size: 1.05rem;
+            color: #000080;
+            margin-bottom: 0.3rem;
+        }
+        .help-panel h3 {
+            font-size: 0.9rem;
+            color: #000080;
+            margin: 1.1rem 0 0.2rem;
+        }
+        .help-panel p, .help-panel li {
+            font-size: 0.8rem;
+            line-height: 1.55;
+            color: #444;
+        }
+        .help-panel table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.4rem;
+        }
+        .help-panel td {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.4rem;
+            border-top: 1px solid #eee;
+            vertical-align: top;
+            color: #444;
+        }
+        .help-panel td.col {
+            font-weight: 700;
+            color: #000080;
+            white-space: nowrap;
+        }
+        .help-panel .req {
+            color: #c62828;
+            font-weight: 700;
+        }
+        .help-close {
+            float: right;
+            background: #000080;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 0.3rem 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>RSR Far North 2025</h1>
+        <h1 id="page-title">RSR Far North 2025</h1>
+        <div class="subtitle" id="page-subtitle"></div>
+        <button class="edit-toggle" id="edit-toggle" title="Show where each value comes from in the Google Sheet">&#9998; Edit</button>
         <div class="route-toggle">
-            <button class="toggle-btn active" data-route="rugged">⛰️ Rugged</button>
-            <button class="toggle-btn" data-route="rolling">🌾 Rolling</button>
+            <button class="toggle-btn active" data-route="rugged" id="btn-rugged">&#9968;&#65039; Rugged</button>
+            <button class="toggle-btn" data-route="rolling" id="btn-rolling">&#127806; Rolling</button>
+        </div>
+        <div class="toggle-src" id="toggle-src"></div>
+        <div class="editbar">
+            <div class="loaded-at" id="loaded-at"></div>
+            <button id="btn-refresh" title="Re-fetch the sheet. Google's publish cache can lag a few minutes behind your edits.">&#8635; Reload data</button>
+            <a id="btn-open-sheet" href="#" target="_blank" rel="noopener">&#8599; Open sheet</a>
+            <button id="btn-help">? Field reference</button>
         </div>
     </div>
     <div class="container" id="days-container">
         <div style="text-align:center; padding:3rem 1rem; color:#000080;">
-            <div style="font-size:2rem; margin-bottom:1rem;">⏳</div>
+            <div style="font-size:2rem; margin-bottom:1rem;">&#9203;</div>
             <div style="font-weight:600;">Loading route data...</div>
         </div>
     </div>
+    <div class="help-overlay" id="help-overlay"><div class="help-panel" id="help-panel"></div></div>
     <script>
         // ── CONFIG ──────────────────────────────────────────────
+        const PARAMS = new URLSearchParams(window.location.search);
         // Pass sheet ID as ?sheet=YOUR_SHEET_ID in the URL
-        const SHEET_ID = new URLSearchParams(window.location.search).get('sheet');
+        const SHEET_ID = PARAMS.get('sheet');
         // Override the word shown before each number, e.g. ?label=Section.
         // Falls back to a per-row "label" column in the Days sheet, then "Day".
-        const LABEL_OVERRIDE = new URLSearchParams(window.location.search).get('label');
+        const LABEL_OVERRIDE = PARAMS.get('label');
+        // ?edit=1 starts in edit mode, which reveals the tab/column behind every value.
+        let editMode = PARAMS.get('edit') === '1';
 
-        function sheetURL(tab) {
-            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv&sheet=${encodeURIComponent(tab)}`;
+        // ── SCHEMA ──────────────────────────────────────────────
+        // Single source of truth: which tabs and columns exist, what each one
+        // drives on the page, and whether it is required. The source badges,
+        // the field reference panel and the validation banner are all
+        // generated from this, so there is only one place to keep in step.
+        const SCHEMA = {
+            Days: {
+                blurb: 'One row per day. Each row becomes one card.',
+                columns: {
+                    day:               { required: true,  ui: 'Number in the card icon. Also links Shops and Accommodation rows to this day.' },
+                    title:             { required: true,  ui: 'Text before the arrow is used as the start point on the route line.' },
+                    rugged_end:        { required: true,  ui: 'End point on the route line while Rugged is selected.' },
+                    rugged_distance:   { required: true,  ui: 'Distance stat while Rugged is selected.' },
+                    rugged_elevation:  { required: true,  ui: 'Climbing stat while Rugged is selected.' },
+                    rolling_end:       { required: true,  ui: 'End point on the route line while Rolling is selected.' },
+                    rolling_distance:  { required: true,  ui: 'Distance stat while Rolling is selected.' },
+                    rolling_elevation: { required: true,  ui: 'Climbing stat while Rolling is selected.' },
+                    surface:           { required: false, ui: 'Blue surface tag at the top of the opened card.' },
+                    label:             { required: false, ui: 'Word before the number, e.g. Section. Overrides the ?label= URL parameter for this row only.' },
+                    emoji:             { required: false, ui: 'Character shown in the card icon. Defaults to the day number.' },
+                },
+            },
+            Shops: {
+                blurb: 'One row per shop or cafe. Appears under "Shops & Cafes" on the matching day card.',
+                columns: {
+                    day:      { required: true,  ui: 'Which day card this row appears on. Must match a day in the Days tab.' },
+                    name:     { required: true,  ui: 'Bold name at the top of the entry.' },
+                    rugged:   { required: false, ui: 'Distance from the start of the day, shown while Rugged is selected.' },
+                    rolling:  { required: false, ui: 'Distance from the start of the day, shown while Rolling is selected.' },
+                    opens:    { required: false, ui: 'Opening times line.' },
+                    location: { required: false, ui: 'Location line.' },
+                    details:  { required: false, ui: 'Free-text line under the rest.' },
+                },
+            },
+            Accommodation: {
+                blurb: 'One row per camping or accommodation option. Appears under "Camping & Accommodation" on the matching day card.',
+                columns: {
+                    day:      { required: true,  ui: 'Which day card this row appears on. Must match a day in the Days tab.' },
+                    name:     { required: true,  ui: 'Bold name at the top of the entry.' },
+                    rugged:   { required: false, ui: 'Distance from the start of the day, shown while Rugged is selected. Use an em dash for not applicable.' },
+                    rolling:  { required: false, ui: 'Distance from the start of the day, shown while Rolling is selected.' },
+                    location: { required: false, ui: 'Location line.' },
+                    details:  { required: false, ui: 'Free-text line under the rest.' },
+                },
+            },
+            Optional: {
+                keyValue: true,
+                blurb: 'Key/value pairs: page-wide settings, plus the optional spoke card at the bottom. Put the key in the "field" column and the text in the "value" column.',
+                columns: { field: { required: true, ui: 'The setting name, from the list below.' },
+                           value: { required: true, ui: 'The text to show.' } },
+                fields: {
+                    page_title:          { ui: 'Title in the blue header bar.' },
+                    page_subtitle:       { ui: 'Small line under the title. Hidden when empty.' },
+                    route_rugged_label:  { ui: 'Label on the first route toggle button.' },
+                    route_rolling_label: { ui: 'Label on the second route toggle button.' },
+                    title:               { ui: 'Route line of the optional card.' },
+                    distance:            { ui: 'Distance stat of the optional card.' },
+                    elevation:           { ui: 'Climbing stat of the optional card.' },
+                    warning:             { ui: 'First paragraph of the orange warning box.' },
+                    access:              { ui: 'Second paragraph of the orange warning box.' },
+                    shop_1_name:         { ui: 'Shop on the optional card. Number upwards: shop_2_name, shop_3_name...' },
+                    shop_1_opens:        { ui: 'Opening times for shop_1_name.' },
+                    accommodation_1_name:    { ui: 'Accommodation on the optional card. Number upwards.' },
+                    accommodation_1_details: { ui: 'Details for accommodation_1_name.' },
+                },
+                // Keys beyond the listed ones are fine if they follow these patterns.
+                fieldPattern: /^(shop|accommodation)_\d+_(name|opens|details)$/,
+            },
+        };
+
+        // Things the sheet cannot change, listed in the field reference so
+        // nobody goes hunting for a column that does not exist.
+        const CODE_ONLY = [
+            'Colours, fonts and card layout.',
+            'The two route variants themselves. There are always exactly two, and their columns are named rugged_* and rolling_*, whatever you call them on the buttons.',
+            'The section headings "Shops &amp; Cafes" and "Camping &amp; Accommodation", and the icons next to the stats.',
+            'The wording of the labels in each entry, e.g. "Opening times:".',
+        ];
+
+        // ── UTILITIES ───────────────────────────────────────────
+        function esc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // 0 -> A, 25 -> Z, 26 -> AA
+        function colLetter(index) {
+            let s = '', n = index + 1;
+            while (n > 0) {
+                const r = (n - 1) % 26;
+                s = String.fromCharCode(65 + r) + s;
+                n = Math.floor((n - 1) / 26);
+            }
+            return s;
+        }
+
+        function editDistance(a, b) {
+            const m = [];
+            for (let i = 0; i <= b.length; i++) m[i] = [i];
+            for (let j = 0; j <= a.length; j++) m[0][j] = j;
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    m[i][j] = b[i - 1] === a[j - 1]
+                        ? m[i - 1][j - 1]
+                        : Math.min(m[i - 1][j - 1] + 1, m[i][j - 1] + 1, m[i - 1][j] + 1);
+                }
+            }
+            return m[b.length][a.length];
+        }
+
+        function closestName(name, candidates) {
+            const lower = name.toLowerCase();
+            // A truncated or extended name is the most common typo, and edit
+            // distance alone can tie it with an unrelated column.
+            const prefix = candidates
+                .filter(c => {
+                    const cl = c.toLowerCase();
+                    return cl !== lower && (cl.startsWith(lower) || lower.startsWith(cl));
+                })
+                .sort((a, b) => a.length - b.length)[0];
+            if (prefix) return prefix;
+
+            let best = null, bestScore = Infinity;
+            candidates.forEach(c => {
+                const d = editDistance(lower, c.toLowerCase());
+                if (d < bestScore) { bestScore = d; best = c; }
+            });
+            const span = best ? Math.max(name.length, best.length) : name.length;
+            return bestScore <= Math.max(2, Math.floor(span / 3)) ? best : null;
         }
 
         // ── CSV PARSER ──────────────────────────────────────────
+        // Returns { headers, rows }. Each row carries __row, its 1-based
+        // position among the data rows, so a value can be traced to a cell.
         function parseCSV(text) {
-            const rows = [];
+            const cells = [];
             let current = '';
             let inQuotes = false;
             for (let i = 0; i < text.length; i++) {
@@ -258,257 +638,567 @@
                     else { current += ch; }
                 } else {
                     if (ch === '"') { inQuotes = true; }
-                    else if (ch === ',') { rows.push(current); current = ''; }
+                    else if (ch === ',') { cells.push(current); current = ''; }
                     else if (ch === '\n' || (ch === '\r' && text[i + 1] === '\n')) {
-                        rows.push(current); current = '';
+                        cells.push(current); current = '';
                         if (ch === '\r') i++;
-                        rows.push(null); // row delimiter
+                        cells.push(null); // row delimiter
                     } else { current += ch; }
                 }
             }
-            if (current) rows.push(current);
+            if (current) cells.push(current);
 
-            // Split into rows of objects
-            const result = [];
+            const rows = [];
             let headers = [];
             let row = [];
             let isHeader = true;
-            for (const val of rows) {
-                if (val === null) {
-                    if (isHeader) { headers = row; isHeader = false; }
-                    else if (row.length > 0) {
-                        const obj = {};
-                        headers.forEach((h, i) => obj[h.trim()] = (row[i] || '').trim());
-                        result.push(obj);
-                    }
-                    row = [];
-                } else { row.push(val); }
+            const flush = () => {
+                if (isHeader) { headers = row.map(h => h.trim()); isHeader = false; return; }
+                if (row.length === 0) return;
+                if (row.every(v => (v || '').trim() === '')) return; // skip blank lines
+                const obj = { __row: rows.length + 1 };
+                headers.forEach((h, i) => obj[h] = (row[i] || '').trim());
+                rows.push(obj);
+            };
+            for (const val of cells) {
+                if (val === null) { flush(); row = []; } else { row.push(val); }
             }
-            if (row.length > 0 && !isHeader) {
-                const obj = {};
-                headers.forEach((h, i) => obj[h.trim()] = (row[i] || '').trim());
-                result.push(obj);
+            if (row.length > 0) flush();
+            return { headers, rows };
+        }
+
+        // ── STATE ───────────────────────────────────────────────
+        let days = [];
+        let optional = {};
+        let settings = {};
+        let currentRoute = 'rugged';
+        let issues = { errors: [], warnings: [] };
+        let loadedAt = null;
+        const TAB_HEADERS = {};   // tab -> [column, ...]
+        const TAB_GIDS = {};      // tab -> gid, discovered lazily in edit mode
+        const OPT_ROWS = {};      // Optional key -> row number
+        let gidsRequested = false;
+
+        function sheetURL(tab, bust) {
+            const base = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv&sheet=${encodeURIComponent(tab)}`;
+            return bust ? `${base}&_=${Date.now()}` : base;
+        }
+
+        // ── SOURCE BADGES AND DEEP LINKS ────────────────────────
+        // A1-style reference for a value: header row is row 1, so a data row
+        // at position n sits on sheet row n + 1.
+        function cellRef(tab, col, row) {
+            const headers = TAB_HEADERS[tab];
+            if (!headers || !row) return null;
+            // On a key/value tab the text always lives in the value column;
+            // col is the key that names the row.
+            const target = (SCHEMA[tab] || {}).keyValue ? 'value' : col;
+            const idx = headers.indexOf(target);
+            if (idx < 0) return null;
+            return colLetter(idx) + (row + 1);
+        }
+
+        function sheetLink(tab, col, row) {
+            if (!SHEET_ID) return null;
+            let url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
+            const gid = TAB_GIDS[tab];
+            if (gid !== undefined) {
+                url += `#gid=${gid}`;
+                const ref = cellRef(tab, col, row);
+                if (ref) url += `&range=${ref}`;
             }
-            return result;
+            return url;
+        }
+
+        // The badge that says where a value comes from, and links to the cell.
+        function srcBadge(tab, col, row) {
+            const ref = cellRef(tab, col, row);
+            const text = `${tab} · ${col}`;
+            const tip = ref
+                ? `Edit ${tab} tab, column ${col}, cell ${ref}`
+                : `Edit the ${col} column of the ${tab} tab`;
+            const href = sheetLink(tab, col, row);
+            if (!href) return `<span class="src" title="${esc(tip)}">${esc(text)}</span>`;
+            return `<a class="src" href="${esc(href)}" target="_blank" rel="noopener" title="${esc(tip)}"` +
+                   ` data-tab="${esc(tab)}" data-col="${esc(col)}"${ref ? ` data-ref="${esc(ref)}"` : ''}` +
+                   ` onclick="event.stopPropagation()">${esc(text)}</a>`;
+        }
+
+        function isBlank(value) {
+            const v = (value == null ? '' : String(value)).trim();
+            return v === '' || v === '—' || v === '-';
+        }
+
+        // Renders a value with its badge, or a ghost prompt when it is empty.
+        function mark(value, tab, col, row) {
+            const body = isBlank(value)
+                ? `<span class="ghost">add ${esc(col)}</span>`
+                : esc(value);
+            return body + srcBadge(tab, col, row);
+        }
+
+        // Adds is-empty so CSS hides the whole line outside edit mode.
+        function emptyCls(value) {
+            return isBlank(value) ? ' is-empty' : '';
+        }
+
+        function detailLine(label, value, tab, col, row) {
+            return `<div class="detail${emptyCls(value)}">` +
+                   (label ? `${esc(label)}: ` : '') +
+                   mark(value, tab, col, row) +
+                   `</div>`;
         }
 
         // ── DATA LOADING ────────────────────────────────────────
-        let days = [];
-        let optional = {};
-        let currentRoute = 'rugged';
+        async function fetchTab(tab, bust) {
+            const res = await fetch(sheetURL(tab, bust));
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return parseCSV(await res.text());
+        }
 
-        async function loadData() {
+        async function loadData(bust) {
+            const container = document.getElementById('days-container');
             if (!SHEET_ID) {
-                document.getElementById('days-container').innerHTML = `
+                container.innerHTML = `
                     <div style="text-align:center; padding:3rem 1rem; color:#c00;">
-                        <div style="font-size:2rem; margin-bottom:1rem;">⚠️</div>
+                        <div style="font-size:2rem; margin-bottom:1rem;">&#9888;&#65039;</div>
                         <div style="font-weight:600; margin-bottom:0.5rem;">No Sheet ID provided</div>
                         <div style="font-size:0.85rem; color:#666;">Add <code>?sheet=YOUR_SHEET_ID</code> to the URL.</div>
                     </div>
                 `;
                 return;
             }
-            try {
-                const [daysCSV, shopsCSV, accCSV, optCSV] = await Promise.all([
-                    fetch(sheetURL('Days')).then(r => r.text()),
-                    fetch(sheetURL('Shops')).then(r => r.text()),
-                    fetch(sheetURL('Accommodation')).then(r => r.text()),
-                    fetch(sheetURL('Optional')).then(r => r.text()),
-                ]);
 
-                const daysData = parseCSV(daysCSV);
-                const shopsData = parseCSV(shopsCSV);
-                const accData = parseCSV(accCSV);
-                const optData = parseCSV(optCSV);
+            // Fetched one tab at a time so a single broken tab reports itself
+            // instead of blanking the whole page.
+            const tabs = Object.keys(SCHEMA);
+            const parsed = {};
+            const failures = {};
+            await Promise.all(tabs.map(async tab => {
+                try { parsed[tab] = await fetchTab(tab, bust); }
+                catch (err) { failures[tab] = err.message; }
+            }));
 
-                // Group shops and accommodation by day
-                const shopsByDay = {};
-                shopsData.forEach(s => {
-                    const d = s.day;
-                    if (!shopsByDay[d]) shopsByDay[d] = [];
-                    shopsByDay[d].push(s);
-                });
-
-                const accByDay = {};
-                accData.forEach(a => {
-                    const d = a.day;
-                    if (!accByDay[d]) accByDay[d] = [];
-                    accByDay[d].push(a);
-                });
-
-                // Build days array
-                days = daysData.map(d => ({
-                    day: parseInt(d.day),
-                    emoji: d.day,
-                    label: d.label,
-                    title: d.title,
-                    rugged: { end: d.rugged_end, distance: d.rugged_distance, elevation: d.rugged_elevation },
-                    rolling: { end: d.rolling_end, distance: d.rolling_distance, elevation: d.rolling_elevation },
-                    surface: d.surface,
-                    shops: (shopsByDay[d.day] || []).map(s => ({
-                        name: s.name, rugged: s.rugged, rolling: s.rolling,
-                        opens: s.opens, location: s.location, details: s.details
-                    })),
-                    accommodation: (accByDay[d.day] || []).map(a => ({
-                        name: a.name, rugged: a.rugged, rolling: a.rolling,
-                        details: a.details, location: a.location
-                    }))
-                }));
-
-                // Build optional object from key-value pairs
-                const optMap = {};
-                optData.forEach(row => { optMap[row.field] = row.value; });
-                optional = {
-                    emoji: '⚠️',
-                    title: optMap.title || 'Cape Wrath Spoke',
-                    distance: optMap.distance || '',
-                    elevation: optMap.elevation || '',
-                    warning: optMap.warning || '',
-                    access: optMap.access || '',
-                    shops: [],
-                    accommodation: []
-                };
-                // Collect numbered shop/accommodation entries
-                for (let i = 1; optMap[`shop_${i}_name`]; i++) {
-                    optional.shops.push({
-                        name: optMap[`shop_${i}_name`],
-                        opens: optMap[`shop_${i}_opens`] || ''
-                    });
-                }
-                for (let i = 1; optMap[`accommodation_${i}_name`]; i++) {
-                    optional.accommodation.push({
-                        name: optMap[`accommodation_${i}_name`],
-                        details: optMap[`accommodation_${i}_details`] || ''
-                    });
-                }
-
-                renderDays();
-            } catch (err) {
-                document.getElementById('days-container').innerHTML = `
+            if (Object.keys(failures).length === tabs.length) {
+                container.innerHTML = `
                     <div style="text-align:center; padding:3rem 1rem; color:#c00;">
-                        <div style="font-size:2rem; margin-bottom:1rem;">⚠️</div>
+                        <div style="font-size:2rem; margin-bottom:1rem;">&#9888;&#65039;</div>
                         <div style="font-weight:600; margin-bottom:0.5rem;">Failed to load route data</div>
                         <div style="font-size:0.85rem; color:#666;">Check that the Google Sheet is published and the Sheet ID is correct.</div>
-                        <div style="font-size:0.75rem; color:#999; margin-top:1rem;">${err.message}</div>
+                        <div style="font-size:0.75rem; color:#999; margin-top:1rem;">${esc(Object.values(failures)[0])}</div>
                     </div>
                 `;
+                return;
             }
+
+            tabs.forEach(tab => { TAB_HEADERS[tab] = (parsed[tab] || {}).headers || []; });
+
+            const daysData = (parsed.Days || {}).rows || [];
+            const shopsData = (parsed.Shops || {}).rows || [];
+            const accData = (parsed.Accommodation || {}).rows || [];
+            const optData = (parsed.Optional || {}).rows || [];
+
+            const shopsByDay = {};
+            shopsData.forEach(s => { (shopsByDay[s.day] = shopsByDay[s.day] || []).push(s); });
+            const accByDay = {};
+            accData.forEach(a => { (accByDay[a.day] = accByDay[a.day] || []).push(a); });
+
+            days = daysData.map(d => ({
+                __row: d.__row,
+                day: d.day,
+                emoji: d.emoji || d.day,
+                label: d.label,
+                title: d.title,
+                rugged: { end: d.rugged_end, distance: d.rugged_distance, elevation: d.rugged_elevation },
+                rolling: { end: d.rolling_end, distance: d.rolling_distance, elevation: d.rolling_elevation },
+                surface: d.surface,
+                shops: shopsByDay[d.day] || [],
+                accommodation: accByDay[d.day] || [],
+            }));
+
+            // Optional tab is key/value: remember each key's row for deep links.
+            const optMap = {};
+            Object.keys(OPT_ROWS).forEach(k => delete OPT_ROWS[k]);
+            optData.forEach(row => {
+                if (!row.field) return;
+                optMap[row.field] = row.value;
+                OPT_ROWS[row.field] = row.__row;
+            });
+
+            settings = {
+                page_title: optMap.page_title || '',
+                page_subtitle: optMap.page_subtitle || '',
+                route_rugged_label: optMap.route_rugged_label || '',
+                route_rolling_label: optMap.route_rolling_label || '',
+            };
+
+            optional = {
+                emoji: '⚠️',
+                title: optMap.title || '',
+                distance: optMap.distance || '',
+                elevation: optMap.elevation || '',
+                warning: optMap.warning || '',
+                access: optMap.access || '',
+                shops: [],
+                accommodation: [],
+            };
+            for (let i = 1; optMap[`shop_${i}_name`]; i++) {
+                optional.shops.push({ n: i, name: optMap[`shop_${i}_name`], opens: optMap[`shop_${i}_opens`] || '' });
+            }
+            for (let i = 1; optMap[`accommodation_${i}_name`]; i++) {
+                optional.accommodation.push({ n: i, name: optMap[`accommodation_${i}_name`], details: optMap[`accommodation_${i}_details`] || '' });
+            }
+
+            issues = validate(parsed, failures, optMap);
+            loadedAt = new Date();
+            applySettings();
+            renderDays();
+        }
+
+        // ── VALIDATION ──────────────────────────────────────────
+        // A mistyped column used to fail silently: the value simply came out
+        // undefined and the line rendered blank. These checks name it instead.
+        function validate(parsed, failures, optMap) {
+            const errors = [], warnings = [];
+
+            Object.entries(failures).forEach(([tab, msg]) => {
+                errors.push(`Could not load the <code>${esc(tab)}</code> tab (${esc(msg)}). Check it exists and the sheet is published.`);
+            });
+
+            Object.entries(SCHEMA).forEach(([tab, spec]) => {
+                const p = parsed[tab];
+                if (!p) return; // already reported as a failure
+                const known = Object.keys(spec.columns);
+
+                known.forEach(col => {
+                    if (spec.columns[col].required && !p.headers.includes(col)) {
+                        errors.push(`<code>${esc(tab)}</code> tab is missing the required column <code>${esc(col)}</code>.`);
+                    }
+                });
+                p.headers.forEach(h => {
+                    if (!h || known.includes(h)) return;
+                    const guess = closestName(h, known);
+                    warnings.push(`<code>${esc(tab)}</code> tab has an unrecognised column <code>${esc(h)}</code>` +
+                        (guess ? `. Did you mean <code>${esc(guess)}</code>?` : '. It is ignored.'));
+                });
+
+                if (!p.rows.length) {
+                    warnings.push(`<code>${esc(tab)}</code> tab has no rows.`);
+                    return;
+                }
+
+                if (spec.keyValue) {
+                    const knownFields = Object.keys(spec.fields);
+                    p.rows.forEach(row => {
+                        const f = row.field;
+                        if (!f) return;
+                        if (knownFields.includes(f) || spec.fieldPattern.test(f)) return;
+                        const guess = closestName(f, knownFields);
+                        warnings.push(`<code>${esc(tab)}</code> row ${row.__row}: unrecognised field <code>${esc(f)}</code>` +
+                            (guess ? `. Did you mean <code>${esc(guess)}</code>?` : '. It is ignored.'));
+                    });
+                } else {
+                    p.rows.forEach(row => {
+                        known.forEach(col => {
+                            if (spec.columns[col].required && p.headers.includes(col) && isBlank(row[col])) {
+                                warnings.push(`<code>${esc(tab)}</code> row ${row.__row}: <code>${esc(col)}</code> is empty but required.`);
+                            }
+                        });
+                    });
+                }
+            });
+
+            // Cross-tab: a shop pinned to a day that does not exist never shows up.
+            const dayNumbers = ((parsed.Days || {}).rows || []).map(d => d.day).filter(d => !isBlank(d));
+            const dupes = dayNumbers.filter((d, i) => dayNumbers.indexOf(d) !== i);
+            [...new Set(dupes)].forEach(d => {
+                warnings.push(`<code>Days</code> tab has more than one row with <code>day = ${esc(d)}</code>. Each gets its own card.`);
+            });
+            ['Shops', 'Accommodation'].forEach(tab => {
+                const rows = (parsed[tab] || {}).rows || [];
+                rows.forEach(row => {
+                    if (isBlank(row.day)) {
+                        warnings.push(`<code>${esc(tab)}</code> row ${row.__row} has no <code>day</code>, so it is not shown anywhere.`);
+                    } else if (!dayNumbers.includes(row.day)) {
+                        warnings.push(`<code>${esc(tab)}</code> row ${row.__row} has <code>day = ${esc(row.day)}</code>, which is not in the Days tab, so it is not shown anywhere.`);
+                    }
+                });
+            });
+
+            return { errors, warnings };
+        }
+
+        function bannerHTML() {
+            let html = '';
+            if (issues.errors.length) {
+                html += `<div class="banner error"><h3>&#9888;&#65039; ${issues.errors.length} problem${issues.errors.length > 1 ? 's' : ''} with the sheet</h3>` +
+                        `<ul>${issues.errors.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
+            }
+            if (issues.warnings.length) {
+                if (editMode) {
+                    html += `<div class="banner warn"><h3>${issues.warnings.length} thing${issues.warnings.length > 1 ? 's' : ''} to check</h3>` +
+                            `<ul>${issues.warnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
+                } else {
+                    html += `<div class="banner hint" id="warn-hint">` +
+                            `${issues.warnings.length} data warning${issues.warnings.length > 1 ? 's' : ''} &mdash; tap to see what to fix</div>`;
+                }
+            }
+            return html;
+        }
+
+        // ── SETTINGS FROM THE SHEET ─────────────────────────────
+        function applySettings() {
+            const title = document.getElementById('page-title');
+            const titleText = settings.page_title || document.title;
+            title.innerHTML = esc(titleText) + srcBadge('Optional', 'page_title', OPT_ROWS.page_title);
+            document.title = titleText;
+
+            const sub = document.getElementById('page-subtitle');
+            sub.innerHTML = (settings.page_subtitle ? esc(settings.page_subtitle) : `<span class="ghost">add page_subtitle</span>`) +
+                            srcBadge('Optional', 'page_subtitle', OPT_ROWS.page_subtitle);
+            sub.classList.toggle('shown', !!settings.page_subtitle || editMode);
+
+            document.getElementById('btn-rugged').textContent = settings.route_rugged_label || '⛰️ Rugged';
+            document.getElementById('btn-rolling').textContent = settings.route_rolling_label || '🌾 Rolling';
+            // Badges sit below the buttons rather than inside them, so they
+            // cannot intercept a tap meant for the toggle.
+            document.getElementById('toggle-src').innerHTML =
+                srcBadge('Optional', 'route_rugged_label', OPT_ROWS.route_rugged_label) +
+                srcBadge('Optional', 'route_rolling_label', OPT_ROWS.route_rolling_label);
+
+            const open = document.getElementById('btn-open-sheet');
+            open.href = SHEET_ID ? `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit` : '#';
+
+            const loaded = document.getElementById('loaded-at');
+            loaded.textContent = loadedAt
+                ? `Data loaded at ${loadedAt.toLocaleTimeString()} · Google can take a few minutes to publish an edit`
+                : '';
         }
 
         // ── RENDERING ───────────────────────────────────────────
         function renderDays() {
             const container = document.getElementById('days-container');
-            container.innerHTML = '';
-            days.forEach((day, index) => {
+            container.innerHTML = bannerHTML();
+
+            days.forEach(day => {
                 const routeData = day[currentRoute];
                 const card = document.createElement('div');
                 card.className = `day-card day-${day.day}`;
+                card.dataset.day = day.day;
+                const start = (day.title || '').split('→')[0].trim();
                 card.innerHTML = `
-                    <div class="day-header" onclick="toggleDay(${index})">
-                        <div class="day-icon">${day.emoji}</div>
+                    <div class="day-header" onclick="toggleDay(this)">
+                        <div class="day-icon">${esc(day.emoji)}</div>
                         <div class="day-info">
-                            <div class="day-title">${day.label || LABEL_OVERRIDE || 'Day'} ${day.day}</div>
-                            <div class="day-route">${day.title.split('→')[0].trim()} → ${routeData.end}</div>
+                            <div class="day-title">${esc(day.label || LABEL_OVERRIDE || 'Day')} ${mark(day.day, 'Days', 'day', day.__row)}</div>
+                            <div class="day-route">
+                                <span class="${emptyCls(start).trim()}">${mark(start, 'Days', 'title', day.__row)}</span>
+                                &rarr;
+                                <span class="${emptyCls(routeData.end).trim()}">${mark(routeData.end, 'Days', currentRoute + '_end', day.__row)}</span>
+                            </div>
                             <div class="stats">
-                                <div class="stat"><span class="stat-icon">📏</span> ${routeData.distance}</div>
-                                <div class="stat"><span class="stat-icon">⛰️</span> ${routeData.elevation}</div>
+                                <div class="stat${emptyCls(routeData.distance)}"><span class="stat-icon">&#128207;</span> ${mark(routeData.distance, 'Days', currentRoute + '_distance', day.__row)}</div>
+                                <div class="stat${emptyCls(routeData.elevation)}"><span class="stat-icon">&#9968;&#65039;</span> ${mark(routeData.elevation, 'Days', currentRoute + '_elevation', day.__row)}</div>
                             </div>
                         </div>
-                        <div class="expand-icon">▼</div>
+                        <div class="expand-icon">&#9660;</div>
                     </div>
                     <div class="day-content">
                         <div class="content-inner">
-                            <div class="surface-tag">${day.surface}</div>
+                            <div class="surface-tag${emptyCls(day.surface)}">${mark(day.surface, 'Days', 'surface', day.__row)}</div>
 
                             <div class="section">
-                                <div class="section-title">🏪 Shops & Cafés</div>
-                                ${day.shops.map(shop => {
-                                    const distance = currentRoute === 'rugged' ? shop.rugged : shop.rolling;
-                                    return `
+                                <div class="section-title">&#127978; Shops &amp; Caf&eacute;s</div>
+                                ${day.shops.map(shop => `
                                     <div class="item">
-                                        <div class="item-name">${shop.name}</div>
+                                        <div class="item-name">${mark(shop.name, 'Shops', 'name', shop.__row)}</div>
                                         <div class="item-details">
-                                            ${distance ? `Distance from start of day: ${distance}` : ''}
-                                            ${shop.location ? `<br>Location: ${shop.location}` : ''}
-                                            ${shop.opens ? `<br>Opening times: ${shop.opens}` : ''}
-                                            ${shop.details ? `<br>${shop.details}` : ''}
+                                            ${detailLine('Distance from start of day', shop[currentRoute], 'Shops', currentRoute, shop.__row)}
+                                            ${detailLine('Location', shop.location, 'Shops', 'location', shop.__row)}
+                                            ${detailLine('Opening times', shop.opens, 'Shops', 'opens', shop.__row)}
+                                            ${detailLine('', shop.details, 'Shops', 'details', shop.__row)}
                                         </div>
                                     </div>
-                                `}).join('')}
+                                `).join('')}
+                                ${day.shops.length ? '' : `<div class="ghost-note">Nothing here yet. Add a row to the <code>Shops</code> tab with <code>day = ${esc(day.day)}</code>.</div>`}
                             </div>
 
                             <div class="section">
-                                <div class="section-title">🏕️ Camping & Accommodation</div>
-                                ${day.accommodation.map(acc => {
-                                    const distance = currentRoute === 'rugged' ? acc.rugged : acc.rolling;
-                                    return `
+                                <div class="section-title">&#127957;&#65039; Camping &amp; Accommodation</div>
+                                ${day.accommodation.map(acc => `
                                     <div class="item">
-                                        <div class="item-name">${acc.name}</div>
+                                        <div class="item-name">${mark(acc.name, 'Accommodation', 'name', acc.__row)}</div>
                                         <div class="item-details">
-                                            ${distance && distance !== '—' ? `Distance from start of day: ${distance}` : ''}
-                                            ${acc.location ? `${distance && distance !== '—' ? '<br>' : ''}Location: ${acc.location}` : ''}
-                                            ${acc.details ? `<br>${acc.details}` : ''}
+                                            ${detailLine('Distance from start of day', acc[currentRoute], 'Accommodation', currentRoute, acc.__row)}
+                                            ${detailLine('Location', acc.location, 'Accommodation', 'location', acc.__row)}
+                                            ${detailLine('', acc.details, 'Accommodation', 'details', acc.__row)}
                                         </div>
                                     </div>
-                                `}).join('')}
+                                `).join('')}
+                                ${day.accommodation.length ? '' : `<div class="ghost-note">Nothing here yet. Add a row to the <code>Accommodation</code> tab with <code>day = ${esc(day.day)}</code>.</div>`}
                             </div>
                         </div>
                     </div>
                 `;
                 container.appendChild(card);
             });
-            // Add optional Cape Wrath spoke
+
+            if (!days.length) {
+                container.innerHTML += `<div class="ghost-note" style="display:block">No rows in the <code>Days</code> tab yet. Add one row per day to build the cards.</div>`;
+            }
+
+            renderOptionalCard(container);
+        }
+
+        // The optional spoke card only appears once the Optional tab describes
+        // one. In edit mode an outline shows up instead, saying how to fill it.
+        function renderOptionalCard(container) {
+            const hasContent = [optional.title, optional.distance, optional.elevation, optional.warning, optional.access]
+                .some(v => !isBlank(v)) || optional.shops.length || optional.accommodation.length;
+
+            if (!hasContent) {
+                if (editMode) {
+                    const note = document.createElement('div');
+                    note.className = 'ghost-note';
+                    note.id = 'optional-ghost';
+                    note.innerHTML = `No optional spoke card. To add one, put <code>title</code>, <code>distance</code>, ` +
+                        `<code>elevation</code>, <code>warning</code> and <code>access</code> rows in the <code>Optional</code> tab.`;
+                    container.appendChild(note);
+                }
+                return;
+            }
+
             const optCard = document.createElement('div');
             optCard.className = 'day-card optional';
+            optCard.id = 'optional-card';
             optCard.innerHTML = `
-                <div class="day-header" onclick="toggleDay(${days.length})">
+                <div class="day-header" onclick="toggleDay(this)">
                     <div class="day-icon">${optional.emoji}</div>
                     <div class="day-info">
                         <div class="day-title">Optional<span class="optional-badge">Epic</span></div>
-                        <div class="day-route">${optional.title}</div>
+                        <div class="day-route">${mark(optional.title, 'Optional', 'title', OPT_ROWS.title)}</div>
                         <div class="stats">
-                            <div class="stat"><span class="stat-icon">📏</span> ${optional.distance}</div>
-                            <div class="stat"><span class="stat-icon">⛰️</span> ${optional.elevation}</div>
+                            <div class="stat${emptyCls(optional.distance)}"><span class="stat-icon">&#128207;</span> ${mark(optional.distance, 'Optional', 'distance', OPT_ROWS.distance)}</div>
+                            <div class="stat${emptyCls(optional.elevation)}"><span class="stat-icon">&#9968;&#65039;</span> ${mark(optional.elevation, 'Optional', 'elevation', OPT_ROWS.elevation)}</div>
                         </div>
                     </div>
-                    <div class="expand-icon">▼</div>
+                    <div class="expand-icon">&#9660;</div>
                 </div>
                 <div class="day-content">
                     <div class="content-inner">
                         <div class="item warning">
-                            <div class="item-name">⚠️ Important</div>
-                            <div class="item-details">${optional.warning}<br><br>${optional.access}</div>
+                            <div class="item-name">&#9888;&#65039; Important</div>
+                            <div class="item-details">
+                                ${detailLine('', optional.warning, 'Optional', 'warning', OPT_ROWS.warning)}
+                                ${detailLine('', optional.access, 'Optional', 'access', OPT_ROWS.access)}
+                            </div>
                         </div>
 
                         <div class="section">
-                            <div class="section-title">🏪 Shops & Cafés</div>
+                            <div class="section-title">&#127978; Shops &amp; Caf&eacute;s</div>
                             ${optional.shops.map(shop => `
                                 <div class="item">
-                                    <div class="item-name">${shop.name}</div>
-                                    <div class="item-details">Opening times: ${shop.opens}</div>
+                                    <div class="item-name">${mark(shop.name, 'Optional', `shop_${shop.n}_name`, OPT_ROWS[`shop_${shop.n}_name`])}</div>
+                                    <div class="item-details">
+                                        ${detailLine('Opening times', shop.opens, 'Optional', `shop_${shop.n}_opens`, OPT_ROWS[`shop_${shop.n}_opens`])}
+                                    </div>
                                 </div>
                             `).join('')}
+                            ${optional.shops.length ? '' : `<div class="ghost-note">Add <code>shop_1_name</code> and <code>shop_1_opens</code> rows to the <code>Optional</code> tab.</div>`}
                         </div>
 
                         <div class="section">
-                            <div class="section-title">🏕️ Camping & Accommodation</div>
+                            <div class="section-title">&#127957;&#65039; Camping &amp; Accommodation</div>
                             ${optional.accommodation.map(acc => `
                                 <div class="item">
-                                    <div class="item-name">${acc.name}</div>
-                                    <div class="item-details">${acc.details}</div>
+                                    <div class="item-name">${mark(acc.name, 'Optional', `accommodation_${acc.n}_name`, OPT_ROWS[`accommodation_${acc.n}_name`])}</div>
+                                    <div class="item-details">
+                                        ${detailLine('', acc.details, 'Optional', `accommodation_${acc.n}_details`, OPT_ROWS[`accommodation_${acc.n}_details`])}
+                                    </div>
                                 </div>
                             `).join('')}
+                            ${optional.accommodation.length ? '' : `<div class="ghost-note">Add <code>accommodation_1_name</code> and <code>accommodation_1_details</code> rows to the <code>Optional</code> tab.</div>`}
                         </div>
                     </div>
                 </div>
             `;
             container.appendChild(optCard);
         }
-        function toggleDay(index) {
-            const cards = document.querySelectorAll('.day-card');
-            cards[index].classList.toggle('expanded');
+
+        function toggleDay(el) {
+            el.closest('.day-card').classList.toggle('expanded');
         }
-        // Route toggle
+
+        // ── FIELD REFERENCE PANEL ───────────────────────────────
+        function renderHelp() {
+            const tabs = Object.entries(SCHEMA).map(([tab, spec]) => {
+                const rows = Object.entries(spec.columns).map(([col, c]) =>
+                    `<tr><td class="col">${esc(col)}${c.required ? ' <span class="req">*</span>' : ''}</td><td>${esc(c.ui)}</td></tr>`
+                ).join('');
+                const fields = spec.fields ? `
+                    <p style="margin-top:0.5rem;">Values for the <code>field</code> column:</p>
+                    <table>${Object.entries(spec.fields).map(([f, d]) =>
+                        `<tr><td class="col">${esc(f)}</td><td>${esc(d.ui)}</td></tr>`).join('')}</table>` : '';
+                return `<h3>${esc(tab)} tab</h3><p>${esc(spec.blurb)}</p><table>${rows}</table>${fields}`;
+            }).join('');
+
+            document.getElementById('help-panel').innerHTML = `
+                <button class="help-close" id="help-close">Close</button>
+                <h2>Where everything comes from</h2>
+                <p>Every value on the page is a cell in the Google Sheet. Turn on
+                <strong>Edit</strong> in the header and each value grows a small blue badge
+                naming its tab and column &mdash; tap the badge to open that cell in the sheet.
+                Columns marked <span class="req">*</span> are required.</p>
+                ${tabs}
+                <h3>Set in the code, not the sheet</h3>
+                <ul>${CODE_ONLY.map(c => `<li>${c}</li>`).join('')}</ul>
+            `;
+            document.getElementById('help-close').addEventListener('click', closeHelp);
+        }
+
+        function openHelp() {
+            renderHelp();
+            document.getElementById('help-overlay').classList.add('open');
+        }
+        function closeHelp() {
+            document.getElementById('help-overlay').classList.remove('open');
+        }
+
+        // ── EDIT MODE ───────────────────────────────────────────
+        // Tab gids are needed to link to a specific tab and cell. They are only
+        // discoverable from the published document, so fetch them once, lazily,
+        // the first time edit mode is turned on.
+        async function discoverGids() {
+            if (gidsRequested || !SHEET_ID) return;
+            gidsRequested = true;
+            try {
+                const res = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/pubhtml`);
+                const html = await res.text();
+                const re = /sheet-button-(\d+)[^>]*>(?:\s*<a[^>]*>)?\s*([^<]+)/g;
+                let m, found = false;
+                while ((m = re.exec(html)) !== null) {
+                    TAB_GIDS[m[2].trim()] = m[1];
+                    found = true;
+                }
+                if (found) { applySettings(); renderDays(); }
+            } catch (err) {
+                // Links fall back to the sheet's front page, which is still useful.
+            }
+        }
+
+        function setEditMode(on) {
+            editMode = on;
+            document.body.classList.toggle('edit-mode', on);
+            document.getElementById('edit-toggle').innerHTML = on ? '✓ Editing' : '✎ Edit';
+            const url = new URL(window.location.href);
+            if (on) url.searchParams.set('edit', '1'); else url.searchParams.delete('edit');
+            history.replaceState(null, '', url);
+            if (on) discoverGids();
+            applySettings();
+            renderDays();
+        }
+
+        // ── EVENTS ──────────────────────────────────────────────
         document.querySelectorAll('.toggle-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
@@ -517,7 +1207,20 @@
                 renderDays();
             });
         });
+        document.getElementById('edit-toggle').addEventListener('click', () => setEditMode(!editMode));
+        document.getElementById('btn-help').addEventListener('click', openHelp);
+        document.getElementById('btn-refresh').addEventListener('click', () => loadData(true));
+        document.getElementById('help-overlay').addEventListener('click', e => {
+            if (e.target.id === 'help-overlay') closeHelp();
+        });
+        document.addEventListener('click', e => {
+            if (e.target.id === 'warn-hint') setEditMode(true);
+        });
+
         // Load data on page load
+        document.body.classList.toggle('edit-mode', editMode);
+        document.getElementById('edit-toggle').innerHTML = editMode ? '✓ Editing' : '✎ Edit';
+        if (editMode) discoverGids();
         loadData();
     </script>
 </body>
