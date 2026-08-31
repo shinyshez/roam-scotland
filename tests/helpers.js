@@ -4,15 +4,16 @@ const path = require('path');
 const CSV_DIR = path.join(__dirname, '..', 'csv');
 const read = f => fs.readFileSync(path.join(CSV_DIR, f), 'utf8');
 
-// The four tabs exactly as the sample sheet ships them.
+// The five tabs exactly as the sample sheet ships them.
 const DEFAULT_TABS = () => ({
+  Config: read('config.csv'),
   Days: read('days.csv'),
   Shops: read('shops.csv'),
   Accommodation: read('accommodation.csv'),
   Optional: read('optional.csv'),
 });
 
-const DEFAULT_GIDS = { Days: '0', Shops: '111', Accommodation: '222', Optional: '333' };
+const DEFAULT_GIDS = { Days: '0', Shops: '111', Accommodation: '222', Optional: '333', Config: '444' };
 
 function pubhtml(gids) {
   const items = Object.entries(gids)
@@ -35,13 +36,18 @@ async function mockSheet(page, { tabs = DEFAULT_TABS(), gids = DEFAULT_GIDS } = 
     }
     const tab = new URL(url).searchParams.get('sheet');
     const body = tabs[tab];
-    if (body == null) return route.fulfill({ status: 404, body: 'not found' });
+    if (body == null) return route.fulfill({ status: 400, body: 'no such sheet' });
     return route.fulfill({ status: 200, contentType: 'text/csv', body });
   });
 }
 
 const SHEET_ID = 'TEST_SHEET_ID';
 const appURL = (params = '') => `/index.html?sheet=${SHEET_ID}${params}`;
+
+// Waits for the splash screen to fade and the content to be revealed.
+async function ready(page) {
+  await page.locator('#main-header').waitFor({ state: 'visible', timeout: 15000 });
+}
 
 // Rebuilds a CSV with a header renamed, to simulate a mistyped column.
 function renameColumn(csv, from, to) {
@@ -63,4 +69,4 @@ function blankColumn(csv, column) {
   }).join('\n');
 }
 
-module.exports = { mockSheet, appURL, SHEET_ID, DEFAULT_TABS, DEFAULT_GIDS, renameColumn, blankColumn, read };
+module.exports = { mockSheet, appURL, ready, SHEET_ID, DEFAULT_TABS, DEFAULT_GIDS, renameColumn, blankColumn, read };

@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000080">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
     <title>RSR Far North 2025</title>
     <style>
         * {
@@ -36,24 +41,6 @@
         }
         .header .subtitle {
             display: none;
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.85);
-            margin-top: 0.25rem;
-        }
-        .header .subtitle.shown {
-            display: block;
-        }
-        .toggle-src {
-            display: none;
-            justify-content: center;
-            gap: 0.35rem;
-            margin-top: 0.4rem;
-        }
-        body.edit-mode .toggle-src {
-            display: flex;
-        }
-        .toggle-src .src {
-            margin-left: 0;
         }
         .route-toggle {
             display: flex;
@@ -166,7 +153,7 @@
             transition: max-height 0.3s ease;
         }
         .day-card.expanded .day-content {
-            max-height: 4000px;
+            max-height: 2000px;
         }
         .content-inner {
             padding: 0 1.2rem 1.2rem;
@@ -204,8 +191,23 @@
             color: #555;
             line-height: 1.6;
         }
-        .detail {
-            margin-bottom: 0.1rem;
+        .gps-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: #000080;
+            color: #fff;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            margin-top: 0.6rem;
+            margin-right: 0.5rem;
+            transition: opacity 0.2s;
+        }
+        .gps-link:hover {
+            opacity: 0.85;
         }
         .surface-tag {
             display: inline-block;
@@ -238,8 +240,87 @@
         .warning .item-name {
             color: #ff9800;
         }
+        .install-btn {
+            margin-top: 0.5rem;
+            padding: 0.35rem 1rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .install-btn:hover {
+            background: #fff;
+            color: #000080;
+            border-color: #fff;
+        }
+        /* ── SPLASH SCREEN ─────────────────────────────────── */
+        .splash {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            background: #e8e6dc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        .splash.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .splash-logo {
+            width: 180px;
+            height: auto;
+            animation: splashEntry 0.8s ease-out both, splashPulse 2s ease-in-out 0.8s infinite;
+        }
+        .splash-text {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #000080;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeUp 0.6s ease-out 0.5s forwards;
+        }
+        .splash-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) 0.8s infinite;
+        }
+        @keyframes splashEntry {
+            from { opacity: 0; transform: scale(0.7) rotate(-8deg); }
+            to { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+        }
 
-        /* ── Edit-mode affordances ──────────────────────────────── */
+        /* ── EDIT MODE ─────────────────────────────────────── */
+        .header .subtitle {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.85);
+            margin-top: 0.25rem;
+        }
+        .header .subtitle.shown {
+            display: block;
+        }
         .edit-toggle {
             position: absolute;
             top: 0.6rem;
@@ -260,6 +341,18 @@
         /* Give the toggle its own band so it never sits on the title badge. */
         body.edit-mode .header {
             padding-top: 2.3rem;
+        }
+        .toggle-src {
+            display: none;
+            justify-content: center;
+            gap: 0.35rem;
+            margin-top: 0.4rem;
+        }
+        body.edit-mode .toggle-src {
+            display: flex;
+        }
+        .toggle-src .src {
+            margin-left: 0;
         }
         .editbar {
             display: none;
@@ -290,7 +383,7 @@
             color: rgba(255, 255, 255, 0.8);
             width: 100%;
         }
-        /* Source badge: which tab + column feeds this value */
+        /* Source badge: which tab and column feeds this value */
         .src {
             display: none;
             font-size: 0.6rem;
@@ -334,6 +427,9 @@
         }
         body.edit-mode span.is-empty {
             display: inline;
+        }
+        .detail {
+            margin-bottom: 0.1rem;
         }
         .ghost-note {
             display: none;
@@ -457,39 +553,56 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1 id="page-title">RSR Far North 2025</h1>
+    <!-- Splash screen -->
+    <div class="splash" id="splash">
+        <img class="splash-logo" id="splash-logo" src="icon.png" alt="Roam Scotland Rally">
+        <div class="splash-text">Loading<span class="splash-dots"></span></div>
+    </div>
+
+    <div class="header" style="display:none;" id="main-header">
+        <h1 id="page-title">Loading...</h1>
         <div class="subtitle" id="page-subtitle"></div>
         <button class="edit-toggle" id="edit-toggle" title="Show where each value comes from in the Google Sheet">&#9998; Edit</button>
-        <div class="route-toggle">
+        <div class="route-toggle" id="route-toggle">
             <button class="toggle-btn active" data-route="rugged" id="btn-rugged">&#9968;&#65039; Rugged</button>
             <button class="toggle-btn" data-route="rolling" id="btn-rolling">&#127806; Rolling</button>
         </div>
         <div class="toggle-src" id="toggle-src"></div>
+        <button class="install-btn" id="install-btn" style="display:none;" onclick="installApp()">Install App</button>
         <div class="editbar">
             <div class="loaded-at" id="loaded-at"></div>
-            <button id="btn-refresh" title="Re-fetch the sheet. Google's publish cache can lag a few minutes behind your edits.">&#8635; Reload data</button>
+            <button id="btn-refresh" title="Re-fetch the sheet. Google's cache can lag a few minutes behind your edits.">&#8635; Reload data</button>
             <a id="btn-open-sheet" href="#" target="_blank" rel="noopener">&#8599; Open sheet</a>
             <button id="btn-help">? Field reference</button>
         </div>
     </div>
-    <div class="container" id="days-container">
-        <div style="text-align:center; padding:3rem 1rem; color:#000080;">
-            <div style="font-size:2rem; margin-bottom:1rem;">&#9203;</div>
-            <div style="font-weight:600;">Loading route data...</div>
-        </div>
-    </div>
+    <div class="container" id="days-container" style="display:none;"></div>
     <div class="help-overlay" id="help-overlay"><div class="help-panel" id="help-panel"></div></div>
     <script>
         // ── CONFIG ──────────────────────────────────────────────
-        const PARAMS = new URLSearchParams(window.location.search);
-        // Pass sheet ID as ?sheet=YOUR_SHEET_ID in the URL
-        const SHEET_ID = PARAMS.get('sheet');
+        // Sheet ID resolution order: ?sheet= → #sheet= → cookie → localStorage
+        // Cookie is the key bridge: iOS standalone strips URL params/hash,
+        // and has separate localStorage, but shares cookies with Safari.
+        const params = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+        function getCookie(name) {
+            const m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+            return m ? decodeURIComponent(m[1]) : null;
+        }
+        const SHEET_ID = params.get('sheet') || hashParams.get('sheet') || getCookie('sheetId') || localStorage.getItem('sheetId');
+        if (SHEET_ID) {
+            localStorage.setItem('sheetId', SHEET_ID);
+            // Cookie persists into iOS standalone mode (365 day expiry)
+            document.cookie = `sheetId=${encodeURIComponent(SHEET_ID)};max-age=${365*86400};path=/;SameSite=Lax`;
+            if (!hashParams.get('sheet')) {
+                window.location.hash = `sheet=${SHEET_ID}`;
+            }
+        }
         // Override the word shown before each number, e.g. ?label=Section.
         // Falls back to a per-row "label" column in the Days sheet, then "Day".
-        const LABEL_OVERRIDE = PARAMS.get('label');
+        const LABEL_OVERRIDE = params.get('label');
         // ?edit=1 starts in edit mode, which reveals the tab/column behind every value.
-        let editMode = PARAMS.get('edit') === '1';
+        let editMode = params.get('edit') === '1';
 
         // ── SCHEMA ──────────────────────────────────────────────
         // Single source of truth: which tabs and columns exist, what each one
@@ -509,6 +622,8 @@
                     rolling_distance:  { required: true,  ui: 'Distance stat while Rolling is selected.' },
                     rolling_elevation: { required: true,  ui: 'Climbing stat while Rolling is selected.' },
                     surface:           { required: false, ui: 'Blue surface tag at the top of the opened card.' },
+                    rugged_gps:        { required: false, ui: 'Link for the GPS File button while Rugged is selected. Leave empty to hide the button.' },
+                    rolling_gps:       { required: false, ui: 'Link for the GPS File button while Rolling is selected.' },
                     label:             { required: false, ui: 'Word before the number, e.g. Section. Overrides the ?label= URL parameter for this row only.' },
                     emoji:             { required: false, ui: 'Character shown in the card icon. Defaults to the day number.' },
                 },
@@ -536,23 +651,35 @@
                     details:  { required: false, ui: 'Free-text line under the rest.' },
                 },
             },
-            Optional: {
+            Config: {
                 keyValue: true,
-                blurb: 'Key/value pairs: page-wide settings, plus the optional spoke card at the bottom. Put the key in the "field" column and the text in the "value" column.',
+                optionalTab: true,
+                blurb: 'Page-wide settings as key/value pairs. Put the setting name in the "field" column and the text in the "value" column. The whole tab is optional.',
                 columns: { field: { required: true, ui: 'The setting name, from the list below.' },
-                           value: { required: true, ui: 'The text to show.' } },
+                           value: { required: true, ui: 'The text to use.' } },
                 fields: {
                     page_title:          { ui: 'Title in the blue header bar.' },
                     page_subtitle:       { ui: 'Small line under the title. Hidden when empty.' },
+                    logo:                { ui: 'Image shown on the loading splash screen. Defaults to icon.png.' },
+                    show_route_toggle:   { ui: 'Set to false to hide the Rugged/Rolling buttons for a single-route ride.' },
                     route_rugged_label:  { ui: 'Label on the first route toggle button.' },
                     route_rolling_label: { ui: 'Label on the second route toggle button.' },
-                    title:               { ui: 'Route line of the optional card.' },
-                    distance:            { ui: 'Distance stat of the optional card.' },
-                    elevation:           { ui: 'Climbing stat of the optional card.' },
-                    warning:             { ui: 'First paragraph of the orange warning box.' },
-                    access:              { ui: 'Second paragraph of the orange warning box.' },
-                    shop_1_name:         { ui: 'Shop on the optional card. Number upwards: shop_2_name, shop_3_name...' },
-                    shop_1_opens:        { ui: 'Opening times for shop_1_name.' },
+                },
+            },
+            Optional: {
+                keyValue: true,
+                optionalTab: true,
+                blurb: 'The extra spoke card at the bottom of the page, as key/value pairs. The whole tab is optional: with no title row, no card is shown.',
+                columns: { field: { required: true, ui: 'The field name, from the list below.' },
+                           value: { required: true, ui: 'The text to show.' } },
+                fields: {
+                    title:       { ui: 'Route line of the optional card.' },
+                    distance:    { ui: 'Distance stat of the optional card.' },
+                    elevation:   { ui: 'Climbing stat of the optional card.' },
+                    warning:     { ui: 'First paragraph of the orange warning box.' },
+                    access:      { ui: 'Second paragraph of the orange warning box.' },
+                    shop_1_name: { ui: 'Shop on the optional card. Number upwards: shop_2_name, shop_3_name...' },
+                    shop_1_opens:{ ui: 'Opening times for shop_1_name.' },
                     accommodation_1_name:    { ui: 'Accommodation on the optional card. Number upwards.' },
                     accommodation_1_details: { ui: 'Details for accommodation_1_name.' },
                 },
@@ -568,6 +695,7 @@
             'The two route variants themselves. There are always exactly two, and their columns are named rugged_* and rolling_*, whatever you call them on the buttons.',
             'The section headings "Shops &amp; Cafes" and "Camping &amp; Accommodation", and the icons next to the stats.',
             'The wording of the labels in each entry, e.g. "Opening times:".',
+            'The splash screen wording, and the app icon used when the page is installed to a home screen.',
         ];
 
         // ── UTILITIES ───────────────────────────────────────────
@@ -669,24 +797,28 @@
 
         // ── STATE ───────────────────────────────────────────────
         let days = [];
-        let optional = {};
+        let optional = null;
         let settings = {};
         let currentRoute = 'rugged';
         let issues = { errors: [], warnings: [] };
         let loadedAt = null;
         const TAB_HEADERS = {};   // tab -> [column, ...]
         const TAB_GIDS = {};      // tab -> gid, discovered lazily in edit mode
-        const OPT_ROWS = {};      // Optional key -> row number
+        const KV_ROWS = { Config: {}, Optional: {} };  // key/value tab -> field -> row
         let gidsRequested = false;
 
         function sheetURL(tab, bust) {
-            const base = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/pub?output=csv&sheet=${encodeURIComponent(tab)}`;
-            return bust ? `${base}&_=${Date.now()}` : base;
+            let url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+            // Key/value tabs have too few rows for gviz header auto-detection,
+            // which would otherwise swallow the first row.
+            if ((SCHEMA[tab] || {}).keyValue) url += '&headers=0';
+            if (bust) url += `&_=${Date.now()}`;
+            return url;
         }
 
         // ── SOURCE BADGES AND DEEP LINKS ────────────────────────
-        // A1-style reference for a value: header row is row 1, so a data row
-        // at position n sits on sheet row n + 1.
+        // A1-style reference for a value: the header row is row 1, so a data
+        // row at position n sits on sheet row n + 1.
         function cellRef(tab, col, row) {
             const headers = TAB_HEADERS[tab];
             if (!headers || !row) return null;
@@ -750,6 +882,23 @@
         }
 
         // ── DATA LOADING ────────────────────────────────────────
+        function dismissSplash() {
+            document.getElementById('splash').classList.add('hidden');
+            document.getElementById('main-header').style.display = '';
+            document.getElementById('days-container').style.display = '';
+        }
+
+        function showFatal(message, detail) {
+            dismissSplash();
+            document.getElementById('days-container').innerHTML = `
+                <div style="text-align:center; padding:3rem 1rem; color:#c00;">
+                    <div style="font-size:2rem; margin-bottom:1rem;">&#9888;&#65039;</div>
+                    <div style="font-weight:600; margin-bottom:0.5rem;">${message}</div>
+                    <div style="font-size:0.85rem; color:#666;">${detail}</div>
+                </div>
+            `;
+        }
+
         async function fetchTab(tab, bust) {
             const res = await fetch(sheetURL(tab, bust));
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -757,46 +906,43 @@
         }
 
         async function loadData(bust) {
-            const container = document.getElementById('days-container');
             if (!SHEET_ID) {
-                container.innerHTML = `
-                    <div style="text-align:center; padding:3rem 1rem; color:#c00;">
-                        <div style="font-size:2rem; margin-bottom:1rem;">&#9888;&#65039;</div>
-                        <div style="font-weight:600; margin-bottom:0.5rem;">No Sheet ID provided</div>
-                        <div style="font-size:0.85rem; color:#666;">Add <code>?sheet=YOUR_SHEET_ID</code> to the URL.</div>
-                    </div>
-                `;
+                showFatal('No Sheet ID provided', 'Add <code>?sheet=YOUR_SHEET_ID</code> to the URL.');
                 return;
             }
+            const loadStart = Date.now();
 
-            // Fetched one tab at a time so a single broken tab reports itself
-            // instead of blanking the whole page.
-            const tabs = Object.keys(SCHEMA);
+            // Config is fetched first so the title and splash logo can be
+            // applied while the rest of the data is still in flight.
             const parsed = {};
             const failures = {};
-            await Promise.all(tabs.map(async tab => {
+            try { parsed.Config = await fetchTab('Config', bust); }
+            catch (err) { failures.Config = err.message; }
+            TAB_HEADERS.Config = (parsed.Config || {}).headers || [];
+            readSettings(parsed.Config);
+            applyEarlySettings();
+
+            // The rest are fetched one tab at a time, so a single broken tab
+            // reports itself instead of blanking the whole page.
+            const rest = ['Days', 'Shops', 'Accommodation', 'Optional'];
+            await Promise.all(rest.map(async tab => {
                 try { parsed[tab] = await fetchTab(tab, bust); }
                 catch (err) { failures[tab] = err.message; }
             }));
 
-            if (Object.keys(failures).length === tabs.length) {
-                container.innerHTML = `
-                    <div style="text-align:center; padding:3rem 1rem; color:#c00;">
-                        <div style="font-size:2rem; margin-bottom:1rem;">&#9888;&#65039;</div>
-                        <div style="font-weight:600; margin-bottom:0.5rem;">Failed to load route data</div>
-                        <div style="font-size:0.85rem; color:#666;">Check that the Google Sheet is published and the Sheet ID is correct.</div>
-                        <div style="font-size:0.75rem; color:#999; margin-top:1rem;">${esc(Object.values(failures)[0])}</div>
-                    </div>
-                `;
+            const required = ['Days', 'Shops', 'Accommodation'];
+            if (required.every(t => failures[t])) {
+                showFatal('Failed to load route data',
+                    'Check that the Google Sheet is shared and the Sheet ID is correct.' +
+                    `<div style="font-size:0.75rem; color:#999; margin-top:1rem;">${esc(failures.Days)}</div>`);
                 return;
             }
 
-            tabs.forEach(tab => { TAB_HEADERS[tab] = (parsed[tab] || {}).headers || []; });
+            rest.forEach(tab => { TAB_HEADERS[tab] = (parsed[tab] || {}).headers || []; });
 
             const daysData = (parsed.Days || {}).rows || [];
             const shopsData = (parsed.Shops || {}).rows || [];
             const accData = (parsed.Accommodation || {}).rows || [];
-            const optData = (parsed.Optional || {}).rows || [];
 
             const shopsByDay = {};
             shopsData.forEach(s => { (shopsByDay[s.day] = shopsByDay[s.day] || []).push(s); });
@@ -809,65 +955,85 @@
                 emoji: d.emoji || d.day,
                 label: d.label,
                 title: d.title,
-                rugged: { end: d.rugged_end, distance: d.rugged_distance, elevation: d.rugged_elevation },
-                rolling: { end: d.rolling_end, distance: d.rolling_distance, elevation: d.rolling_elevation },
+                rugged: { end: d.rugged_end, distance: d.rugged_distance, elevation: d.rugged_elevation, gps: d.rugged_gps || '' },
+                rolling: { end: d.rolling_end, distance: d.rolling_distance, elevation: d.rolling_elevation, gps: d.rolling_gps || '' },
                 surface: d.surface,
                 shops: shopsByDay[d.day] || [],
                 accommodation: accByDay[d.day] || [],
             }));
 
-            // Optional tab is key/value: remember each key's row for deep links.
-            const optMap = {};
-            Object.keys(OPT_ROWS).forEach(k => delete OPT_ROWS[k]);
-            optData.forEach(row => {
-                if (!row.field) return;
-                optMap[row.field] = row.value;
-                OPT_ROWS[row.field] = row.__row;
-            });
-
-            settings = {
-                page_title: optMap.page_title || '',
-                page_subtitle: optMap.page_subtitle || '',
-                route_rugged_label: optMap.route_rugged_label || '',
-                route_rolling_label: optMap.route_rolling_label || '',
-            };
-
-            optional = {
-                emoji: '⚠️',
-                title: optMap.title || '',
-                distance: optMap.distance || '',
-                elevation: optMap.elevation || '',
-                warning: optMap.warning || '',
-                access: optMap.access || '',
-                shops: [],
-                accommodation: [],
-            };
-            for (let i = 1; optMap[`shop_${i}_name`]; i++) {
-                optional.shops.push({ n: i, name: optMap[`shop_${i}_name`], opens: optMap[`shop_${i}_opens`] || '' });
-            }
-            for (let i = 1; optMap[`accommodation_${i}_name`]; i++) {
-                optional.accommodation.push({ n: i, name: optMap[`accommodation_${i}_name`], details: optMap[`accommodation_${i}_details`] || '' });
-            }
-
-            issues = validate(parsed, failures, optMap);
+            readOptional(parsed.Optional);
+            issues = validate(parsed, failures);
             loadedAt = new Date();
             applySettings();
             renderDays();
+
+            // Keep the splash up for at least 1.5s so it does not flash by.
+            setTimeout(dismissSplash, Math.max(0, 1500 - (Date.now() - loadStart)));
+        }
+
+        // Key/value tabs: remember each key's row so a badge can link to its cell.
+        function keyValueMap(parsedTab, store) {
+            Object.keys(store).forEach(k => delete store[k]);
+            const map = {};
+            ((parsedTab || {}).rows || []).forEach(row => {
+                if (!row.field) return;
+                map[row.field] = row.value;
+                store[row.field] = row.__row;
+            });
+            return map;
+        }
+
+        function readSettings(parsedConfig) {
+            const cfg = keyValueMap(parsedConfig, KV_ROWS.Config);
+            settings = {
+                page_title: cfg.page_title || '',
+                page_subtitle: cfg.page_subtitle || '',
+                logo: cfg.logo || '',
+                show_route_toggle: cfg.show_route_toggle || '',
+                route_rugged_label: cfg.route_rugged_label || '',
+                route_rolling_label: cfg.route_rolling_label || '',
+            };
+        }
+
+        function readOptional(parsedOptional) {
+            const opt = keyValueMap(parsedOptional, KV_ROWS.Optional);
+            const hasAny = ['title', 'distance', 'elevation', 'warning', 'access']
+                .some(k => !isBlank(opt[k])) || !isBlank(opt.shop_1_name) || !isBlank(opt.accommodation_1_name);
+            if (!hasAny) { optional = null; return; }
+            optional = {
+                emoji: '⚠️',
+                title: opt.title || '',
+                distance: opt.distance || '',
+                elevation: opt.elevation || '',
+                warning: opt.warning || '',
+                access: opt.access || '',
+                shops: [],
+                accommodation: [],
+            };
+            for (let i = 1; opt[`shop_${i}_name`]; i++) {
+                optional.shops.push({ n: i, name: opt[`shop_${i}_name`], opens: opt[`shop_${i}_opens`] || '' });
+            }
+            for (let i = 1; opt[`accommodation_${i}_name`]; i++) {
+                optional.accommodation.push({ n: i, name: opt[`accommodation_${i}_name`], details: opt[`accommodation_${i}_details`] || '' });
+            }
         }
 
         // ── VALIDATION ──────────────────────────────────────────
         // A mistyped column used to fail silently: the value simply came out
         // undefined and the line rendered blank. These checks name it instead.
-        function validate(parsed, failures, optMap) {
+        function validate(parsed, failures) {
             const errors = [], warnings = [];
 
             Object.entries(failures).forEach(([tab, msg]) => {
-                errors.push(`Could not load the <code>${esc(tab)}</code> tab (${esc(msg)}). Check it exists and the sheet is published.`);
+                // Config and Optional are allowed not to exist at all.
+                if (SCHEMA[tab].optionalTab) return;
+                errors.push(`Could not load the <code>${esc(tab)}</code> tab (${esc(msg)}). Check it exists and the sheet is shared.`);
             });
 
             Object.entries(SCHEMA).forEach(([tab, spec]) => {
                 const p = parsed[tab];
-                if (!p) return; // already reported as a failure
+                if (!p) return; // missing or already reported
                 const known = Object.keys(spec.columns);
 
                 known.forEach(col => {
@@ -883,7 +1049,7 @@
                 });
 
                 if (!p.rows.length) {
-                    warnings.push(`<code>${esc(tab)}</code> tab has no rows.`);
+                    if (!spec.optionalTab) warnings.push(`<code>${esc(tab)}</code> tab has no rows.`);
                     return;
                 }
 
@@ -892,7 +1058,8 @@
                     p.rows.forEach(row => {
                         const f = row.field;
                         if (!f) return;
-                        if (knownFields.includes(f) || spec.fieldPattern.test(f)) return;
+                        if (knownFields.includes(f)) return;
+                        if (spec.fieldPattern && spec.fieldPattern.test(f)) return;
                         const guess = closestName(f, knownFields);
                         warnings.push(`<code>${esc(tab)}</code> row ${row.__row}: unrecognised field <code>${esc(f)}</code>` +
                             (guess ? `. Did you mean <code>${esc(guess)}</code>?` : '. It is ignored.'));
@@ -915,8 +1082,7 @@
                 warnings.push(`<code>Days</code> tab has more than one row with <code>day = ${esc(d)}</code>. Each gets its own card.`);
             });
             ['Shops', 'Accommodation'].forEach(tab => {
-                const rows = (parsed[tab] || {}).rows || [];
-                rows.forEach(row => {
+                ((parsed[tab] || {}).rows || []).forEach(row => {
                     if (isBlank(row.day)) {
                         warnings.push(`<code>${esc(tab)}</code> row ${row.__row} has no <code>day</code>, so it is not shown anywhere.`);
                     } else if (!dayNumbers.includes(row.day)) {
@@ -947,35 +1113,61 @@
         }
 
         // ── SETTINGS FROM THE SHEET ─────────────────────────────
+        // Applied as soon as the Config tab lands, before the route data,
+        // so the splash and title are right from the first paint.
+        function applyEarlySettings() {
+            const titleText = settings.page_title || 'RSR Far North 2025';
+            document.getElementById('page-title').textContent = titleText;
+            document.title = titleText;
+            if (settings.logo) document.getElementById('splash-logo').src = settings.logo;
+            if (routeToggleHidden()) document.getElementById('route-toggle').style.display = 'none';
+        }
+
+        function routeToggleHidden() {
+            return (settings.show_route_toggle || '').toLowerCase() === 'false';
+        }
+
         function applySettings() {
+            const titleText = settings.page_title || 'RSR Far North 2025';
             const title = document.getElementById('page-title');
-            const titleText = settings.page_title || document.title;
-            title.innerHTML = esc(titleText) + srcBadge('Optional', 'page_title', OPT_ROWS.page_title);
+            title.innerHTML = esc(titleText) + srcBadge('Config', 'page_title', KV_ROWS.Config.page_title);
             document.title = titleText;
 
             const sub = document.getElementById('page-subtitle');
             sub.innerHTML = (settings.page_subtitle ? esc(settings.page_subtitle) : `<span class="ghost">add page_subtitle</span>`) +
-                            srcBadge('Optional', 'page_subtitle', OPT_ROWS.page_subtitle);
+                            srcBadge('Config', 'page_subtitle', KV_ROWS.Config.page_subtitle);
             sub.classList.toggle('shown', !!settings.page_subtitle || editMode);
 
             document.getElementById('btn-rugged').textContent = settings.route_rugged_label || '⛰️ Rugged';
             document.getElementById('btn-rolling').textContent = settings.route_rolling_label || '🌾 Rolling';
             // Badges sit below the buttons rather than inside them, so they
             // cannot intercept a tap meant for the toggle.
-            document.getElementById('toggle-src').innerHTML =
-                srcBadge('Optional', 'route_rugged_label', OPT_ROWS.route_rugged_label) +
-                srcBadge('Optional', 'route_rolling_label', OPT_ROWS.route_rolling_label);
+            const hidden = routeToggleHidden();
+            document.getElementById('route-toggle').style.display = hidden ? 'none' : '';
+            const toggleSrc = document.getElementById('toggle-src');
+            toggleSrc.innerHTML = hidden
+                ? srcBadge('Config', 'show_route_toggle', KV_ROWS.Config.show_route_toggle)
+                : srcBadge('Config', 'route_rugged_label', KV_ROWS.Config.route_rugged_label) +
+                  srcBadge('Config', 'route_rolling_label', KV_ROWS.Config.route_rolling_label);
 
-            const open = document.getElementById('btn-open-sheet');
-            open.href = SHEET_ID ? `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit` : '#';
+            document.getElementById('btn-open-sheet').href =
+                SHEET_ID ? `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit` : '#';
 
-            const loaded = document.getElementById('loaded-at');
-            loaded.textContent = loadedAt
+            document.getElementById('loaded-at').textContent = loadedAt
                 ? `Data loaded at ${loadedAt.toLocaleTimeString()} · Google can take a few minutes to publish an edit`
                 : '';
         }
 
         // ── RENDERING ───────────────────────────────────────────
+        function gpsSlot(routeData, day) {
+            const col = currentRoute + '_gps';
+            const badge = srcBadge('Days', col, day.__row);
+            if (isBlank(routeData.gps)) {
+                return `<span class="is-empty"><span class="ghost">add ${esc(col)}</span>${badge}</span>`;
+            }
+            return `<span><a class="gps-link" href="${esc(routeData.gps)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128229; GPS File</a>${badge}</span>`;
+        }
+
         function renderDays() {
             const container = document.getElementById('days-container');
             container.innerHTML = bannerHTML();
@@ -1006,6 +1198,7 @@
                     <div class="day-content">
                         <div class="content-inner">
                             <div class="surface-tag${emptyCls(day.surface)}">${mark(day.surface, 'Days', 'surface', day.__row)}</div>
+                            ${gpsSlot(routeData, day)}
 
                             <div class="section">
                                 <div class="section-title">&#127978; Shops &amp; Caf&eacute;s</div>
@@ -1053,10 +1246,7 @@
         // The optional spoke card only appears once the Optional tab describes
         // one. In edit mode an outline shows up instead, saying how to fill it.
         function renderOptionalCard(container) {
-            const hasContent = [optional.title, optional.distance, optional.elevation, optional.warning, optional.access]
-                .some(v => !isBlank(v)) || optional.shops.length || optional.accommodation.length;
-
-            if (!hasContent) {
+            if (!optional) {
                 if (editMode) {
                     const note = document.createElement('div');
                     note.className = 'ghost-note';
@@ -1076,10 +1266,10 @@
                     <div class="day-icon">${optional.emoji}</div>
                     <div class="day-info">
                         <div class="day-title">Optional<span class="optional-badge">Epic</span></div>
-                        <div class="day-route">${mark(optional.title, 'Optional', 'title', OPT_ROWS.title)}</div>
+                        <div class="day-route">${mark(optional.title, 'Optional', 'title', KV_ROWS.Optional.title)}</div>
                         <div class="stats">
-                            <div class="stat${emptyCls(optional.distance)}"><span class="stat-icon">&#128207;</span> ${mark(optional.distance, 'Optional', 'distance', OPT_ROWS.distance)}</div>
-                            <div class="stat${emptyCls(optional.elevation)}"><span class="stat-icon">&#9968;&#65039;</span> ${mark(optional.elevation, 'Optional', 'elevation', OPT_ROWS.elevation)}</div>
+                            <div class="stat${emptyCls(optional.distance)}"><span class="stat-icon">&#128207;</span> ${mark(optional.distance, 'Optional', 'distance', KV_ROWS.Optional.distance)}</div>
+                            <div class="stat${emptyCls(optional.elevation)}"><span class="stat-icon">&#9968;&#65039;</span> ${mark(optional.elevation, 'Optional', 'elevation', KV_ROWS.Optional.elevation)}</div>
                         </div>
                     </div>
                     <div class="expand-icon">&#9660;</div>
@@ -1089,8 +1279,8 @@
                         <div class="item warning">
                             <div class="item-name">&#9888;&#65039; Important</div>
                             <div class="item-details">
-                                ${detailLine('', optional.warning, 'Optional', 'warning', OPT_ROWS.warning)}
-                                ${detailLine('', optional.access, 'Optional', 'access', OPT_ROWS.access)}
+                                ${detailLine('', optional.warning, 'Optional', 'warning', KV_ROWS.Optional.warning)}
+                                ${detailLine('', optional.access, 'Optional', 'access', KV_ROWS.Optional.access)}
                             </div>
                         </div>
 
@@ -1098,9 +1288,9 @@
                             <div class="section-title">&#127978; Shops &amp; Caf&eacute;s</div>
                             ${optional.shops.map(shop => `
                                 <div class="item">
-                                    <div class="item-name">${mark(shop.name, 'Optional', `shop_${shop.n}_name`, OPT_ROWS[`shop_${shop.n}_name`])}</div>
+                                    <div class="item-name">${mark(shop.name, 'Optional', `shop_${shop.n}_name`, KV_ROWS.Optional[`shop_${shop.n}_name`])}</div>
                                     <div class="item-details">
-                                        ${detailLine('Opening times', shop.opens, 'Optional', `shop_${shop.n}_opens`, OPT_ROWS[`shop_${shop.n}_opens`])}
+                                        ${detailLine('Opening times', shop.opens, 'Optional', `shop_${shop.n}_opens`, KV_ROWS.Optional[`shop_${shop.n}_opens`])}
                                     </div>
                                 </div>
                             `).join('')}
@@ -1111,9 +1301,9 @@
                             <div class="section-title">&#127957;&#65039; Camping &amp; Accommodation</div>
                             ${optional.accommodation.map(acc => `
                                 <div class="item">
-                                    <div class="item-name">${mark(acc.name, 'Optional', `accommodation_${acc.n}_name`, OPT_ROWS[`accommodation_${acc.n}_name`])}</div>
+                                    <div class="item-name">${mark(acc.name, 'Optional', `accommodation_${acc.n}_name`, KV_ROWS.Optional[`accommodation_${acc.n}_name`])}</div>
                                     <div class="item-details">
-                                        ${detailLine('', acc.details, 'Optional', `accommodation_${acc.n}_details`, OPT_ROWS[`accommodation_${acc.n}_details`])}
+                                        ${detailLine('', acc.details, 'Optional', `accommodation_${acc.n}_details`, KV_ROWS.Optional[`accommodation_${acc.n}_details`])}
                                     </div>
                                 </div>
                             `).join('')}
@@ -1186,10 +1376,14 @@
             }
         }
 
+        function paintEditToggle() {
+            document.getElementById('edit-toggle').innerHTML = editMode ? '✓ Editing' : '✎ Edit';
+            document.body.classList.toggle('edit-mode', editMode);
+        }
+
         function setEditMode(on) {
             editMode = on;
-            document.body.classList.toggle('edit-mode', on);
-            document.getElementById('edit-toggle').innerHTML = on ? '✓ Editing' : '✎ Edit';
+            paintEditToggle();
             const url = new URL(window.location.href);
             if (on) url.searchParams.set('edit', '1'); else url.searchParams.delete('edit');
             history.replaceState(null, '', url);
@@ -1217,9 +1411,65 @@
             if (e.target.id === 'warn-hint') setEditMode(true);
         });
 
+        // Register service worker for offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+        }
+        // PWA install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-btn').style.display = '';
+        });
+        function installApp() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(() => {
+                deferredPrompt = null;
+                document.getElementById('install-btn').style.display = 'none';
+            });
+        }
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('install-btn').style.display = 'none';
+        });
+        // ── DIAGNOSTICS (tap title 5× to reveal) ───────────
+        let _tapCount = 0, _tapTimer;
+        document.getElementById('page-title').addEventListener('click', () => {
+            _tapCount++;
+            clearTimeout(_tapTimer);
+            _tapTimer = setTimeout(() => _tapCount = 0, 1500);
+            if (_tapCount >= 5) {
+                _tapCount = 0;
+                const isStandalone = window.navigator.standalone === true ||
+                    window.matchMedia('(display-mode: standalone)').matches;
+                const swStatus = navigator.serviceWorker ?
+                    navigator.serviceWorker.controller ? 'active (controlling)' : 'registered (not controlling)' : 'unsupported';
+                const info = [
+                    `Mode: ${isStandalone ? 'STANDALONE (home screen)' : 'browser'}`,
+                    `URL: ${window.location.href}`,
+                    `Sheet from URL param: ${params.get('sheet') || '(none)'}`,
+                    `Sheet from hash: ${hashParams.get('sheet') || '(none)'}`,
+                    `Sheet from cookie: ${getCookie('sheetId') || '(none)'}`,
+                    `Sheet from localStorage: ${localStorage.getItem('sheetId') || '(none)'}`,
+                    `Resolved SHEET_ID: ${SHEET_ID || '(none)'}`,
+                    `Service Worker: ${swStatus}`,
+                    `Tab gids: ${Object.keys(TAB_GIDS).length ? JSON.stringify(TAB_GIDS) : '(not discovered)'}`,
+                    `User Agent: ${navigator.userAgent.slice(0, 80)}`,
+                ];
+                const existing = document.getElementById('debug-panel');
+                if (existing) { existing.remove(); return; }
+                const panel = document.createElement('div');
+                panel.id = 'debug-panel';
+                panel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#111;color:#0f0;font:11px/1.6 monospace;padding:12px;z-index:9999;max-height:50vh;overflow:auto;';
+                panel.textContent = info.join('\n');
+                panel.style.whiteSpace = 'pre-wrap';
+                panel.addEventListener('click', () => panel.remove());
+                document.body.appendChild(panel);
+            }
+        });
         // Load data on page load
-        document.body.classList.toggle('edit-mode', editMode);
-        document.getElementById('edit-toggle').innerHTML = editMode ? '✓ Editing' : '✎ Edit';
+        paintEditToggle();
         if (editMode) discoverGids();
         loadData();
     </script>
