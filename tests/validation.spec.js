@@ -1,10 +1,11 @@
 const { test, expect } = require('@playwright/test');
-const { mockSheet, appURL, DEFAULT_TABS, renameColumn } = require('./helpers');
+const { mockSheet, appURL, ready, DEFAULT_TABS, renameColumn } = require('./helpers');
 
 test.describe('validation banner', () => {
   test('is silent on a healthy sheet', async ({ page }) => {
     await mockSheet(page);
     await page.goto(appURL('&edit=1'));
+    await ready(page);
     await expect(page.locator('.day-card').first()).toBeVisible();
     await expect(page.locator('.banner')).toHaveCount(0);
   });
@@ -58,11 +59,31 @@ test.describe('validation banner', () => {
 
   test('flags an unrecognised key in the Optional tab', async ({ page }) => {
     const tabs = DEFAULT_TABS();
-    tabs.Optional = 'field,value\npage_titel,Typo Title\ntitle,Cape Wrath Spoke\n';
+    tabs.Optional = 'field,value\nelevaton,1300 m\ntitle,Cape Wrath Spoke\n';
+    await mockSheet(page, { tabs });
+    await page.goto(appURL('&edit=1'));
+    await expect(page.locator('.banner.warn')).toContainText('unrecognised field elevaton');
+    await expect(page.locator('.banner.warn')).toContainText('Did you mean elevation?');
+  });
+
+  test('flags an unrecognised key in the Config tab', async ({ page }) => {
+    const tabs = DEFAULT_TABS();
+    tabs.Config = 'field,value\npage_titel,Typo Title\n';
     await mockSheet(page, { tabs });
     await page.goto(appURL('&edit=1'));
     await expect(page.locator('.banner.warn')).toContainText('unrecognised field page_titel');
     await expect(page.locator('.banner.warn')).toContainText('Did you mean page_title?');
+  });
+
+  test('an absent Config or Optional tab is not a problem', async ({ page }) => {
+    const tabs = DEFAULT_TABS();
+    delete tabs.Config;
+    delete tabs.Optional;
+    await mockSheet(page, { tabs });
+    await page.goto(appURL('&edit=1'));
+    await ready(page);
+    await expect(page.locator('.day-card').first()).toBeVisible();
+    await expect(page.locator('.banner')).toHaveCount(0);
   });
 
   test('accepts numbered shop and accommodation keys', async ({ page }) => {

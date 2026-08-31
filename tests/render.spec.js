@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { mockSheet, appURL, DEFAULT_TABS, blankColumn } = require('./helpers');
+const { mockSheet, appURL, ready, DEFAULT_TABS, blankColumn } = require('./helpers');
 
 test.describe('baseline rendering', () => {
   test('renders a card per day plus the optional spoke', async ({ page }) => {
@@ -78,6 +78,42 @@ test.describe('baseline rendering', () => {
   });
 });
 
+test.describe('deployed-app features', () => {
+  test('the splash screen gives way to the content', async ({ page }) => {
+    await mockSheet(page);
+    await page.goto(appURL());
+    await expect(page.locator('#splash')).toHaveClass(/hidden/, { timeout: 15000 });
+    await expect(page.locator('#main-header')).toBeVisible();
+    await expect(page.locator('#days-container')).toBeVisible();
+  });
+
+  test('shows a GPS link only for a day that has one', async ({ page }) => {
+    const tabs = DEFAULT_TABS();
+    tabs.Days = tabs.Days.split('\n').map((l, i) =>
+      i === 1 ? l.replace(/,,$/, ',https://example.com/day1.gpx,') : l).join('\n');
+    await mockSheet(page, { tabs });
+    await page.goto(appURL());
+    await ready(page);
+    const first = page.locator('.day-card').first();
+    await first.locator('.day-header').click();
+    await expect(first.locator('.gps-link')).toHaveAttribute('href', 'https://example.com/day1.gpx');
+    // Day 2 has no GPS file, so no button.
+    const second = page.locator('.day-card').nth(1);
+    await second.locator('.day-header').click();
+    await expect(second.locator('.gps-link')).toHaveCount(0);
+  });
+
+  test('names the gps column in edit mode, without nesting links', async ({ page }) => {
+    await mockSheet(page);
+    await page.goto(appURL('&edit=1'));
+    await ready(page);
+    const first = page.locator('.day-card').first();
+    await first.locator('.day-header').click();
+    await expect(first.locator('.content-inner .src').filter({ hasText: 'rugged_gps' })).toBeVisible();
+    await expect(first.locator('a.gps-link a')).toHaveCount(0);
+  });
+});
+
 test.describe('failure states', () => {
   test('asks for a sheet ID when none is given', async ({ page }) => {
     await mockSheet(page);
@@ -106,6 +142,7 @@ test.describe('failure states', () => {
       Shops: 'day,name,rugged,rolling,opens,location,details\n',
       Accommodation: 'day,name,rugged,rolling,details,location\n',
       Optional: 'field,value\n',
+      Config: 'field,value\n',
     } });
     await page.goto(appURL('&edit=1'));
     await expect(page.locator('#days-container')).toContainText('No rows in the Days tab yet');

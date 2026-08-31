@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { mockSheet, appURL, SHEET_ID, DEFAULT_TABS, blankColumn } = require('./helpers');
+const { mockSheet, appURL, ready, SHEET_ID, DEFAULT_TABS, blankColumn } = require('./helpers');
 
 test.describe('source badges', () => {
   test('are hidden until edit mode is turned on', async ({ page }) => {
@@ -47,6 +47,8 @@ test.describe('source badges', () => {
   test('the edit toggle does not cover the title badge', async ({ page }) => {
     await mockSheet(page);
     await page.goto(appURL('&edit=1'));
+    await ready(page);
+    await expect(page.locator('#page-title .src')).toHaveText('Config · page_title');
     const badge = await page.locator('#page-title .src').boundingBox();
     const toggle = await page.locator('#edit-toggle').boundingBox();
     const overlaps = badge.x < toggle.x + toggle.width && toggle.x < badge.x + badge.width &&
@@ -88,6 +90,14 @@ test.describe('deep links into the sheet', () => {
     // Optional is key/value: the value column is B, and title is its first row.
     await expect(page.locator('#optional-card .day-route .src'))
       .toHaveAttribute('href', /#gid=333&range=B2$/);
+  });
+
+  test('reach the Config tab as well', async ({ page }) => {
+    await mockSheet(page);
+    await page.goto(appURL('&edit=1'));
+    await ready(page);
+    // Config is key/value: page_title is its first row, value column B.
+    await expect(page.locator('#page-title .src')).toHaveAttribute('href', /#gid=444&range=B2$/);
   });
 
   test('track the row a value actually sits on', async ({ page }) => {
@@ -155,15 +165,16 @@ test.describe('ghost placeholders', () => {
 });
 
 test.describe('settings driven from the sheet', () => {
-  test('title, subtitle and route button labels come from the Optional tab', async ({ page }) => {
+  test('title, subtitle and route button labels come from the Config tab', async ({ page }) => {
     const tabs = DEFAULT_TABS();
-    tabs.Optional = 'field,value\n' +
+    tabs.Config = 'field,value\n' +
       'page_title,Roam Scotland — West\n' +
       'page_subtitle,Five days on the west coast\n' +
       'route_rugged_label,Hard\n' +
       'route_rolling_label,Easy\n';
     await mockSheet(page, { tabs });
     await page.goto(appURL());
+    await ready(page);
     await expect(page.locator('#page-title')).toContainText('Roam Scotland — West');
     await expect(page.locator('#page-subtitle')).toBeVisible();
     await expect(page.locator('#page-subtitle')).toContainText('Five days on the west coast');
@@ -175,16 +186,40 @@ test.describe('settings driven from the sheet', () => {
   test('keeps the built-in labels when the sheet does not set them', async ({ page }) => {
     await mockSheet(page);
     await page.goto(appURL());
+    await ready(page);
     await expect(page.locator('#btn-rugged')).toContainText('Rugged');
     await expect(page.locator('#page-subtitle')).toBeHidden();
+  });
+
+  test('survives the Config tab not existing at all', async ({ page }) => {
+    const tabs = DEFAULT_TABS();
+    delete tabs.Config;
+    await mockSheet(page, { tabs });
+    await page.goto(appURL('&edit=1'));
+    await ready(page);
+    await expect(page.locator('.day-card').first()).toBeVisible();
+    await expect(page.locator('.banner.error')).toHaveCount(0);
+    await expect(page.locator('#page-title')).toContainText('RSR Far North 2025');
+  });
+
+  test('show_route_toggle=false hides the route buttons', async ({ page }) => {
+    const tabs = DEFAULT_TABS();
+    tabs.Config = 'field,value\npage_title,One Route\nshow_route_toggle,false\n';
+    await mockSheet(page, { tabs });
+    await page.goto(appURL('&edit=1'));
+    await ready(page);
+    await expect(page.locator('#route-toggle')).toBeHidden();
+    // Edit mode still says which field hid them.
+    await expect(page.locator('#toggle-src .src')).toHaveText('Config · show_route_toggle');
   });
 
   test('names the fields behind the route buttons without blocking them', async ({ page }) => {
     await mockSheet(page);
     await page.goto(appURL('&edit=1'));
+    await ready(page);
     const badges = page.locator('#toggle-src .src');
     await expect(badges).toHaveCount(2);
-    await expect(badges.first()).toHaveText('Optional · route_rugged_label');
+    await expect(badges.first()).toHaveText('Config · route_rugged_label');
     // The buttons themselves carry no badge, so a tap always switches route.
     await expect(page.locator('#btn-rolling .src')).toHaveCount(0);
     await page.locator('#btn-rolling').click();
@@ -204,8 +239,9 @@ test.describe('edit toolbar and field reference', () => {
   test('reload re-fetches the sheet', async ({ page }) => {
     let hits = 0;
     await mockSheet(page);
-    await page.context().route(/output=csv/, route => { hits++; route.fallback(); });
+    await page.context().route(/gviz/, route => { hits++; route.fallback(); });
     await page.goto(appURL('&edit=1'));
+    await ready(page);
     await expect(page.locator('.day-card').first()).toBeVisible();
     const before = hits;
     await page.locator('#btn-refresh').click();

@@ -8,6 +8,10 @@ module.exports = defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:8000',
     trace: 'on-first-retry',
+    // The app registers a service worker that caches sheet responses. Left
+    // enabled it serves fetches from inside the worker, which bypasses route
+    // interception and makes the mocked sheet data unreliable.
+    serviceWorkers: 'block',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
