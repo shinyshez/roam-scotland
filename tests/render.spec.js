@@ -109,7 +109,7 @@ test.describe('deployed-app features', () => {
     await ready(page);
     const first = page.locator('.day-card').first();
     await first.locator('.day-header').click();
-    await expect(first.locator('.content-inner .src').filter({ hasText: 'rugged_gps' })).toBeVisible();
+    await expect(first.locator('.fld[data-col="rugged_gps"]')).toHaveCount(1);
     await expect(first.locator('a.gps-link a')).toHaveCount(0);
   });
 });

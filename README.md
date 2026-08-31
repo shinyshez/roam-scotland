@@ -10,7 +10,7 @@ An interactive web-based route guide for the **Roam Scotland** rallies. Displays
 - **Camping & accommodation** — options with distance and booking info
 - **Optional spoke card** — an extra epic variant with access/warning information
 - **Live data** — fetches fresh CSV from the Google Sheet on every load
-- **Edit mode** — shows the sheet tab, column and cell behind every value on the page
+- **Edit mode** — hover or tap any value to see the sheet tab, column and cell behind it
 - **Installable + offline** — PWA manifest and a service worker that caches the page and the last data
 - **Mobile-friendly** — responsive, touch-friendly, no runtime dependencies
 
@@ -67,8 +67,10 @@ Everything on the page comes from a cell in the sheet. To find the cell behind
 any value, tap **✎ Edit** in the header (or add `&edit=1` to the URL). In edit
 mode:
 
-- Every value grows a small badge naming its **tab and column**. Tapping the
-  badge opens that tab and cell in Google Sheets.
+- Every sheet-driven value gets a faint dotted underline, so you can see at a
+  glance what is editable. Hover it — or tap, on a phone — and a small card
+  names its **tab, column and cell**, with a link that opens exactly there.
+  Nothing is inserted into the page, so the layout does not shift.
 - Empty fields and empty sections become visible prompts — *"add location"*,
   *"Add a row to the Shops tab with day = 3"* — so it is obvious what is
   missing rather than silently blank.
@@ -87,8 +89,8 @@ maintains the sheet.
 **One caveat on the deep links.** Jumping to an exact tab and cell needs each
 tab's `gid`, which the app can only discover from the sheet's *published*
 document (`/pubhtml`). On a sheet that is link-shared but not published, that
-lookup fails and every badge falls back to linking the sheet's front page — the
-badge still names the right tab, column and cell. Publish the sheet as well
+lookup fails and the link falls back to the sheet's front page — the card still
+names the right tab, column and cell. Publish the sheet as well
 (**File → Share → Publish to web**) if you want the links to land on the cell.
 
 ### Page-wide settings — the `Config` tab
