@@ -77,8 +77,9 @@ test.describe('the field tooltip', () => {
     // Data row 1 sits on sheet row 2, under the header row.
     await page.locator('.day-card').first().locator('.stat').first().locator('.fld').hover();
     await expect(tip(page)).toBeVisible();
-    await expect(tip(page)).toContainText('Days · rugged_distance');
-    await expect(tip(page)).toContainText('cell D2');
+    await expect(tip(page)).toContainText('Tab: Days');
+    await expect(tip(page)).toContainText('Field: rugged_distance');
+    await expect(tip(page)).toContainText('Cell: D2');
   });
 
   test('opens on tap, for a phone with no hover', async ({ page }) => {
@@ -87,7 +88,7 @@ test.describe('the field tooltip', () => {
     await ready(page);
     await page.locator('.day-card').first().locator('.day-title .fld').click();
     await expect(tip(page)).toBeVisible();
-    await expect(tip(page)).toContainText('Days · day');
+    await expect(tip(page)).toContainText('Field: day');
   });
 
   test('links to the exact tab and cell', async ({ page }) => {
@@ -105,7 +106,7 @@ test.describe('the field tooltip', () => {
     await ready(page);
     // Day 4 is the fourth data row, so sheet row 5.
     await page.locator('.day-card').nth(3).locator('.day-title .fld').hover();
-    await expect(tip(page)).toContainText('cell A5');
+    await expect(tip(page)).toContainText('Cell: A5');
     await expect(tip(page).locator('a')).toHaveAttribute('href', /#gid=0&range=A5$/);
   });
 
@@ -132,7 +133,7 @@ test.describe('the field tooltip', () => {
     await ready(page);
     await page.locator('.day-card').first().locator('.stat').first().locator('.fld').hover();
     // The cell is still named, even though the link cannot jump to it.
-    await expect(tip(page)).toContainText('cell D2');
+    await expect(tip(page)).toContainText('Cell: D2');
     await expect(tip(page).locator('a'))
       .toHaveAttribute('href', `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`);
   });
@@ -149,7 +150,8 @@ test.describe('the field tooltip', () => {
 
     await value.click();
     await expect(tip(page)).toBeVisible();
-    await page.locator('.container').click({ position: { x: 5, y: 5 } });
+    // Anything that is not a marked value dismisses it.
+    await page.locator('.day-card').first().locator('.day-icon').click();
     await expect(tip(page)).toBeHidden();
   });
 
@@ -191,8 +193,11 @@ test.describe('the field tooltip', () => {
     const before = await tip(page).boundingBox();
     await page.mouse.wheel(0, 120);
     await expect(tip(page)).toBeVisible();
-    const after = await tip(page).boundingBox();
-    expect(after.y).toBeLessThan(before.y);
+    // The wheel event returns before the scroll is painted, so poll.
+    await expect.poll(async () => {
+      const box = await tip(page).boundingBox();
+      return box ? box.y : Infinity;
+    }).toBeLessThan(before.y);
   });
 
   test('a re-render clears any open tooltip', async ({ page }) => {
@@ -247,7 +252,7 @@ test.describe('the tooltip does not swallow the page', () => {
     await expect(first.locator('a.gps-link')).toHaveAttribute('href', 'https://example.com/day1.gpx');
     await expect(first.locator('a.gps-link a')).toHaveCount(0);
     await first.locator('.fld[data-col="rugged_gps"]').hover();
-    await expect(tip(page)).toContainText('Days · rugged_gps');
+    await expect(tip(page)).toContainText('Field: rugged_gps');
   });
 });
 
@@ -350,7 +355,7 @@ test.describe('settings driven from the sheet', () => {
     // Nothing is added inside the buttons, so a tap always switches route.
     await expect(page.locator('#btn-rolling .fld')).toHaveCount(0);
     await fields.first().hover();
-    await expect(tip(page)).toContainText('Config · route_rugged_label');
+    await expect(tip(page)).toContainText('Field: route_rugged_label');
   });
 });
 
@@ -392,5 +397,39 @@ test.describe('edit toolbar and field reference', () => {
     await expect(panel).toContainText('Set in the code, not the sheet');
     await page.locator('#help-close').click();
     await expect(panel).toBeHidden();
+  });
+});
+
+test.describe('on a touch device', () => {
+  // Mobile emulation is what makes (pointer: coarse) / (hover: none) match.
+  test.use({ viewport: { width: 393, height: 851 }, hasTouch: true, isMobile: true });
+
+  test('the edit button is hidden, so riders are not offered it', async ({ page }) => {
+    await mockSheet(page);
+    await page.goto(appURL());
+    await ready(page);
+    await expect(page.locator('.day-card').first()).toBeVisible();
+    await expect(page.locator('#edit-toggle')).toBeHidden();
+  });
+
+  test('an &edit=1 link still works, and can still be turned off', async ({ page }) => {
+    await mockSheet(page);
+    await page.goto(appURL('&edit=1'));
+    await ready(page);
+    await expect(page.locator('body')).toHaveClass(/edit-mode/);
+    // Visible again, so following a shared link is not a one-way door.
+    await expect(page.locator('#edit-toggle')).toBeVisible();
+    await page.locator('#edit-toggle').click();
+    await expect(page.locator('body')).not.toHaveClass(/edit-mode/);
+    await expect(page.locator('#edit-toggle')).toBeHidden();
+  });
+
+  test('tapping a value still opens the tooltip', async ({ page }) => {
+    await mockSheet(page);
+    await page.goto(appURL('&edit=1'));
+    await ready(page);
+    await page.locator('.day-card').first().locator('.day-title .fld').click();
+    await expect(tip(page)).toBeVisible();
+    await expect(tip(page)).toContainText('Field: day');
   });
 });

@@ -96,17 +96,18 @@ test.describe('validation banner', () => {
     await expect(page.locator('#optional-card')).toContainText('Second Shop');
   });
 
-  test('warnings stay out of the way for readers but offer a way in', async ({ page }) => {
+  test('a reader is shown no warnings at all', async ({ page }) => {
     const tabs = DEFAULT_TABS();
     tabs.Shops = tabs.Shops.trimEnd() + '\n9,Ghost Cafe,1 km,1 km,TBC,,\n';
     await mockSheet(page, { tabs });
     await page.goto(appURL());
-    await expect(page.locator('.banner.warn')).toHaveCount(0);
-    const hint = page.locator('#warn-hint');
-    await expect(hint).toContainText('1 data warning');
-    await hint.click();
-    await expect(page.locator('body')).toHaveClass(/edit-mode/);
+    await ready(page);
+    await expect(page.locator('.day-card').first()).toBeVisible();
+    await expect(page.locator('.banner')).toHaveCount(0);
+    // They are waiting in edit mode for whoever maintains the sheet.
+    await page.locator('#edit-toggle').click();
     await expect(page.locator('.banner.warn')).toBeVisible();
+    await expect(page.locator('.banner.warn')).toContainText('day = 9');
   });
 
   test('errors are shown to everyone, not just editors', async ({ page }) => {

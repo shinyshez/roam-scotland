@@ -342,6 +342,19 @@
         body.edit-mode .header {
             padding-top: 2.3rem;
         }
+        /* Editing means having the sheet open, which in practice means a
+           desktop. On a touch device the button is just a puzzle for the
+           riders the page is actually for, so it is hidden — an &edit=1 link
+           still works, and the button comes back once edit mode is on so
+           nobody who follows one is stranded in it. */
+        @media (hover: none), (pointer: coarse) {
+            .edit-toggle {
+                display: none;
+            }
+            body.edit-mode .edit-toggle {
+                display: block;
+            }
+        }
         .editbar {
             display: none;
             flex-wrap: wrap;
@@ -407,13 +420,15 @@
         .fld-tip.open {
             display: block;
         }
-        .fld-tip .tip-col {
-            font-weight: 700;
-            font-size: 0.78rem;
+        .fld-tip .tip-row {
             display: block;
         }
-        .fld-tip .tip-cell {
-            opacity: 0.85;
+        .fld-tip .tip-label {
+            opacity: 0.7;
+            font-weight: 600;
+        }
+        .fld-tip .tip-val {
+            font-weight: 700;
         }
         .fld-tip a {
             display: inline-block;
@@ -503,14 +518,6 @@
             background: #fff8e1;
             border: 2px solid #ff9800;
             color: #7a5c12;
-        }
-        .banner.hint {
-            background: #fff;
-            border: 1px dashed #000080;
-            color: #000080;
-            cursor: pointer;
-            text-align: center;
-            font-weight: 600;
         }
         /* Field reference panel */
         .help-overlay {
@@ -1127,14 +1134,12 @@
                 html += `<div class="banner error"><h3>&#9888;&#65039; ${issues.errors.length} problem${issues.errors.length > 1 ? 's' : ''} with the sheet</h3>` +
                         `<ul>${issues.errors.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
             }
-            if (issues.warnings.length) {
-                if (editMode) {
-                    html += `<div class="banner warn"><h3>${issues.warnings.length} thing${issues.warnings.length > 1 ? 's' : ''} to check</h3>` +
-                            `<ul>${issues.warnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
-                } else {
-                    html += `<div class="banner hint" id="warn-hint">` +
-                            `${issues.warnings.length} data warning${issues.warnings.length > 1 ? 's' : ''} &mdash; tap to see what to fix</div>`;
-                }
+            // Warnings are for whoever maintains the sheet, so they stay in
+            // edit mode. A reader gets nothing: errors are the only thing
+            // worth interrupting them for.
+            if (issues.warnings.length && editMode) {
+                html += `<div class="banner warn"><h3>${issues.warnings.length} thing${issues.warnings.length > 1 ? 's' : ''} to check</h3>` +
+                        `<ul>${issues.warnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
             }
             return html;
         }
@@ -1427,10 +1432,13 @@
 
             const tab = el.dataset.tab, col = el.dataset.col, ref = el.dataset.ref;
             const url = sheetLink(tab, ref);
+            const row = (label, value) =>
+                `<span class="tip-row"><span class="tip-label">${label}:</span> <span class="tip-val">${esc(value)}</span></span>`;
             tipEl.innerHTML =
-                `<span class="tip-col">${esc(tab)} &middot; ${esc(col)}</span>` +
-                (ref ? `<span class="tip-cell">cell ${esc(ref)}</span>` : '') +
-                (url ? `<br><a href="${esc(url)}" target="_blank" rel="noopener">Open in sheet &#8599;</a>` : '');
+                row('Tab', tab) +
+                row('Field', col) +
+                (ref ? row('Cell', ref) : '') +
+                (url ? `<a href="${esc(url)}" target="_blank" rel="noopener">Open in sheet &#8599;</a>` : '');
             tipEl.classList.add('open');
             positionTip(el);
         }
@@ -1506,9 +1514,6 @@
         document.getElementById('btn-refresh').addEventListener('click', () => loadData(true));
         document.getElementById('help-overlay').addEventListener('click', e => {
             if (e.target.id === 'help-overlay') closeHelp();
-        });
-        document.addEventListener('click', e => {
-            if (e.target.id === 'warn-hint') setEditMode(true);
         });
 
         // Register service worker for offline support
