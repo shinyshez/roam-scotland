@@ -48,7 +48,7 @@ JavaScript. Alongside it: `sw.js` (offline cache), `manifest.json`, `icon.png`.
 each tab as CSV → custom parser → JavaScript objects → DOM rendering.
 
 **`SCHEMA` is the single source of truth.** It declares every tab and column,
-what each drives on the page, and whether it is required. The source badges, the
+what each drives on the page, and whether it is required. The field tooltip, the
 field reference panel and the validation banner are all generated from it — when
 adding or renaming a column, update `SCHEMA` and everything else follows. Do not
 hard-code a column name anywhere else.
@@ -60,6 +60,13 @@ hard-code a column name anywhere else.
 - `currentRoute` — `"rugged"` or `"rolling"`
 - `editMode` — whether source badges and prompts are shown
 - `TAB_HEADERS` / `TAB_GIDS` / `KV_ROWS` — used to turn a value into an A1 cell reference
+- `tipTarget` — the field whose tooltip is currently open, if any
+
+**Field tooltip:** `mark()` wraps every sheet-driven value in a `.fld` span
+carrying `data-tab` / `data-col` / `data-ref`. A single reused `#fld-tip` card
+reads those on hover or tap. It deliberately does **not** call
+`stopPropagation`, so taps still reach the route buttons, the card headers and
+the five-tap diagnostics; adding it back would break all three.
 
 **Row tracing:** `parseCSV` returns `{ headers, rows }` and stamps each row with
 `__row`, its 1-based position among the data rows. A value's cell is
@@ -87,7 +94,8 @@ remove that flag.
 
 Deep links to a cell need each tab's `gid`, which is only discoverable from
 `/pubhtml` — that exists only if the sheet is *also* published. When it fails,
-badges fall back to the sheet's front page; keep that fallback path working.
+the tooltip link falls back to the sheet's front page while still naming the
+cell; keep that fallback path working.
 
 ## CSV Data Schema
 

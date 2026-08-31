@@ -342,18 +342,6 @@
         body.edit-mode .header {
             padding-top: 2.3rem;
         }
-        .toggle-src {
-            display: none;
-            justify-content: center;
-            gap: 0.35rem;
-            margin-top: 0.4rem;
-        }
-        body.edit-mode .toggle-src {
-            display: flex;
-        }
-        .toggle-src .src {
-            margin-left: 0;
-        }
         .editbar {
             display: none;
             flex-wrap: wrap;
@@ -383,33 +371,74 @@
             color: rgba(255, 255, 255, 0.8);
             width: 100%;
         }
-        /* Source badge: which tab and column feeds this value */
-        .src {
+        /* Sheet-driven values: a quiet marker in edit mode, with the
+           tab/column/cell shown on hover or tap rather than inline, so
+           nothing is inserted into the layout. */
+        .fld {
+            border-bottom: 0 solid transparent;
+        }
+        body.edit-mode .fld {
+            border-bottom: 1px dotted rgba(0, 0, 128, 0.55);
+            cursor: help;
+        }
+        body.edit-mode .header .fld {
+            border-bottom-color: rgba(255, 255, 255, 0.7);
+        }
+        body.edit-mode .fld.fld-open {
+            background: rgba(0, 0, 128, 0.1);
+            border-bottom-style: solid;
+        }
+        body.edit-mode .header .fld.fld-open {
+            background: rgba(255, 255, 255, 0.22);
+        }
+        .fld-tip {
             display: none;
-            font-size: 0.6rem;
-            font-weight: 700;
-            letter-spacing: 0.2px;
-            text-transform: none;
+            position: fixed;
+            z-index: 300;
+            max-width: 16rem;
             background: #000080;
             color: #fff;
-            padding: 0.08rem 0.35rem;
-            border-radius: 5px;
-            margin-left: 0.35rem;
-            text-decoration: none;
-            vertical-align: middle;
-            white-space: nowrap;
-            opacity: 0.9;
+            border-radius: 10px;
+            padding: 0.6rem 0.7rem;
+            font-size: 0.72rem;
+            line-height: 1.5;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
         }
-        body.edit-mode .src {
+        .fld-tip.open {
+            display: block;
+        }
+        .fld-tip .tip-col {
+            font-weight: 700;
+            font-size: 0.78rem;
+            display: block;
+        }
+        .fld-tip .tip-cell {
+            opacity: 0.85;
+        }
+        .fld-tip a {
             display: inline-block;
-        }
-        .src:hover {
-            opacity: 1;
-            box-shadow: 0 0 0 2px rgba(0, 0, 128, 0.25);
-        }
-        .header .src {
+            margin-top: 0.4rem;
             background: #fff;
             color: #000080;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 0.22rem 0.5rem;
+            border-radius: 8px;
+        }
+        /* The route-label fields have no value of their own on the page, so
+           they get their own line under the buttons rather than sitting
+           inside them, where a tap would be ambiguous. */
+        .toggle-src {
+            display: none;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-top: 0.4rem;
+            font-size: 0.64rem;
+            color: rgba(255, 255, 255, 0.85);
+        }
+        body.edit-mode .toggle-src {
+            display: flex;
         }
         .ghost {
             color: #9a9a9a;
@@ -577,6 +606,7 @@
         </div>
     </div>
     <div class="container" id="days-container" style="display:none;"></div>
+    <div class="fld-tip" id="fld-tip" role="tooltip"></div>
     <div class="help-overlay" id="help-overlay"><div class="help-panel" id="help-panel"></div></div>
     <script>
         // ── CONFIG ──────────────────────────────────────────────
@@ -830,30 +860,26 @@
             return colLetter(idx) + (row + 1);
         }
 
-        function sheetLink(tab, col, row) {
+        // Link to a tab, and to an exact cell when the gid is known.
+        function sheetLink(tab, ref) {
             if (!SHEET_ID) return null;
             let url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
             const gid = TAB_GIDS[tab];
             if (gid !== undefined) {
                 url += `#gid=${gid}`;
-                const ref = cellRef(tab, col, row);
                 if (ref) url += `&range=${ref}`;
             }
             return url;
         }
 
-        // The badge that says where a value comes from, and links to the cell.
-        function srcBadge(tab, col, row) {
+        // Marks a value as sheet-driven. The tab, column and cell ride along
+        // as data attributes; the tooltip reads them on hover or tap, so
+        // nothing is inserted into the layout.
+        function fldAttrs(tab, col, row, extraClass) {
             const ref = cellRef(tab, col, row);
-            const text = `${tab} · ${col}`;
-            const tip = ref
-                ? `Edit ${tab} tab, column ${col}, cell ${ref}`
-                : `Edit the ${col} column of the ${tab} tab`;
-            const href = sheetLink(tab, col, row);
-            if (!href) return `<span class="src" title="${esc(tip)}">${esc(text)}</span>`;
-            return `<a class="src" href="${esc(href)}" target="_blank" rel="noopener" title="${esc(tip)}"` +
-                   ` data-tab="${esc(tab)}" data-col="${esc(col)}"${ref ? ` data-ref="${esc(ref)}"` : ''}` +
-                   ` onclick="event.stopPropagation()">${esc(text)}</a>`;
+            return `class="fld${extraClass ? ' ' + extraClass : ''}"` +
+                   ` data-tab="${esc(tab)}" data-col="${esc(col)}"` +
+                   (ref ? ` data-ref="${esc(ref)}"` : '');
         }
 
         function isBlank(value) {
@@ -861,12 +887,13 @@
             return v === '' || v === '—' || v === '-';
         }
 
-        // Renders a value with its badge, or a ghost prompt when it is empty.
+        // Renders a value as a sheet-driven field, or a ghost prompt when it
+        // is empty. Outside edit mode this is an unstyled span.
         function mark(value, tab, col, row) {
             const body = isBlank(value)
                 ? `<span class="ghost">add ${esc(col)}</span>`
                 : esc(value);
-            return body + srcBadge(tab, col, row);
+            return `<span ${fldAttrs(tab, col, row)}>${body}</span>`;
         }
 
         // Adds is-empty so CSS hides the whole line outside edit mode.
@@ -1130,12 +1157,11 @@
         function applySettings() {
             const titleText = settings.page_title || 'RSR Far North 2025';
             const title = document.getElementById('page-title');
-            title.innerHTML = esc(titleText) + srcBadge('Config', 'page_title', KV_ROWS.Config.page_title);
+            title.innerHTML = `<span ${fldAttrs('Config', 'page_title', KV_ROWS.Config.page_title)}>${esc(titleText)}</span>`;
             document.title = titleText;
 
             const sub = document.getElementById('page-subtitle');
-            sub.innerHTML = (settings.page_subtitle ? esc(settings.page_subtitle) : `<span class="ghost">add page_subtitle</span>`) +
-                            srcBadge('Config', 'page_subtitle', KV_ROWS.Config.page_subtitle);
+            sub.innerHTML = mark(settings.page_subtitle, 'Config', 'page_subtitle', KV_ROWS.Config.page_subtitle);
             sub.classList.toggle('shown', !!settings.page_subtitle || editMode);
 
             document.getElementById('btn-rugged').textContent = settings.route_rugged_label || '⛰️ Rugged';
@@ -1145,10 +1171,10 @@
             const hidden = routeToggleHidden();
             document.getElementById('route-toggle').style.display = hidden ? 'none' : '';
             const toggleSrc = document.getElementById('toggle-src');
+            const fld = (col) => `<span ${fldAttrs('Config', col, KV_ROWS.Config[col])}>${col}</span>`;
             toggleSrc.innerHTML = hidden
-                ? srcBadge('Config', 'show_route_toggle', KV_ROWS.Config.show_route_toggle)
-                : srcBadge('Config', 'route_rugged_label', KV_ROWS.Config.route_rugged_label) +
-                  srcBadge('Config', 'route_rolling_label', KV_ROWS.Config.route_rolling_label);
+                ? fld('show_route_toggle')
+                : fld('route_rugged_label') + fld('route_rolling_label');
 
             document.getElementById('btn-open-sheet').href =
                 SHEET_ID ? `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit` : '#';
@@ -1161,14 +1187,15 @@
         // ── RENDERING ───────────────────────────────────────────
         function gpsSlot(routeData, day) {
             const col = currentRoute + '_gps';
-            const badge = srcBadge('Days', col, day.__row);
+            const attrs = fldAttrs('Days', col, day.__row);
             if (isBlank(routeData.gps)) {
-                return `<span class="is-empty"><span class="ghost">add ${esc(col)}</span>${badge}</span>`;
+                return `<span ${fldAttrs('Days', col, day.__row, 'is-empty')}><span class="ghost">add ${esc(col)}</span></span>`;
             }
-            return `<span><a class="gps-link" href="${esc(routeData.gps)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#128229; GPS File</a>${badge}</span>`;
+            return `<span ${attrs}><a class="gps-link" href="${esc(routeData.gps)}" target="_blank" rel="noopener">&#128229; GPS File</a></span>`;
         }
 
         function renderDays() {
+            hideTip();
             const container = document.getElementById('days-container');
             container.innerHTML = bannerHTML();
 
@@ -1376,6 +1403,78 @@
             }
         }
 
+        // ── FIELD TOOLTIP ───────────────────────────────────────
+        // One floating card, reused for every field. Hover on a pointer
+        // device, tap on touch. Deliberately does not swallow the click, so
+        // the route buttons, card headers and title taps all still work.
+        let tipEl = null, tipTarget = null, tipHideTimer = null;
+
+        function hideTip() {
+            clearTimeout(tipHideTimer);
+            if (!tipEl) return;
+            tipEl.classList.remove('open');
+            if (tipTarget) tipTarget.classList.remove('fld-open');
+            tipTarget = null;
+        }
+
+        function showTip(el) {
+            if (!editMode) return;
+            clearTimeout(tipHideTimer);
+            tipEl = tipEl || document.getElementById('fld-tip');
+            if (tipTarget && tipTarget !== el) tipTarget.classList.remove('fld-open');
+            tipTarget = el;
+            el.classList.add('fld-open');
+
+            const tab = el.dataset.tab, col = el.dataset.col, ref = el.dataset.ref;
+            const url = sheetLink(tab, ref);
+            tipEl.innerHTML =
+                `<span class="tip-col">${esc(tab)} &middot; ${esc(col)}</span>` +
+                (ref ? `<span class="tip-cell">cell ${esc(ref)}</span>` : '') +
+                (url ? `<br><a href="${esc(url)}" target="_blank" rel="noopener">Open in sheet &#8599;</a>` : '');
+            tipEl.classList.add('open');
+            positionTip(el);
+        }
+
+        function positionTip(el) {
+            const r = el.getBoundingClientRect();
+            // Scrolled out of sight: the card would point at nothing.
+            if (r.bottom < 0 || r.top > window.innerHeight) { hideTip(); return; }
+            const t = tipEl.getBoundingClientRect();
+            const margin = 8;
+            let left = r.left + r.width / 2 - t.width / 2;
+            left = Math.max(margin, Math.min(left, window.innerWidth - t.width - margin));
+            // Below by default, above when there is no room.
+            let top = r.bottom + 6;
+            if (top + t.height > window.innerHeight - margin) {
+                top = Math.max(margin, r.top - t.height - 6);
+            }
+            tipEl.style.left = `${left}px`;
+            tipEl.style.top = `${top}px`;
+        }
+
+        function initTips() {
+            const tip = document.getElementById('fld-tip');
+            document.addEventListener('mouseover', e => {
+                const el = e.target.closest('.fld');
+                if (el) { showTip(el); return; }
+                if (!e.target.closest('.fld-tip')) tipHideTimer = setTimeout(hideTip, 120);
+            });
+            document.addEventListener('click', e => {
+                const el = e.target.closest('.fld');
+                if (el) { showTip(el); return; }
+                if (!e.target.closest('.fld-tip')) hideTip();
+            });
+            // Keep the card open while the pointer is on it, so its link is clickable.
+            tip.addEventListener('mouseenter', () => clearTimeout(tipHideTimer));
+            tip.addEventListener('mouseleave', () => { tipHideTimer = setTimeout(hideTip, 120); });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape') hideTip(); });
+            // Follow the value rather than vanishing: scrolling a long card
+            // into view should not dismiss what you just opened.
+            const reflow = () => { if (tipTarget) positionTip(tipTarget); };
+            window.addEventListener('scroll', reflow, true);
+            window.addEventListener('resize', reflow);
+        }
+
         function paintEditToggle() {
             document.getElementById('edit-toggle').innerHTML = editMode ? '✓ Editing' : '✎ Edit';
             document.body.classList.toggle('edit-mode', editMode);
@@ -1383,6 +1482,7 @@
 
         function setEditMode(on) {
             editMode = on;
+            hideTip();
             paintEditToggle();
             const url = new URL(window.location.href);
             if (on) url.searchParams.set('edit', '1'); else url.searchParams.delete('edit');
@@ -1469,6 +1569,7 @@
             }
         });
         // Load data on page load
+        initTips();
         paintEditToggle();
         if (editMode) discoverGids();
         loadData();
